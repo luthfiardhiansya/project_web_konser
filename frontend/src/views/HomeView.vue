@@ -1,96 +1,14 @@
   <template>
     <div class="min-h-screen flex flex-col justify-between selection:bg-accent selection:text-ink">
-      <!-- TOP ANNOUNCEMENT BAR -->
-      <div class="bg-ink text-paper py-1.5 px-4 text-xs font-bold uppercase tracking-wider flex justify-between items-center nb-border-b">
-        <span>📍 BANDUNG MUSIC HUB — Konser, Gigs & Festival Terkini</span>
-        <div class="hidden sm:flex items-center space-x-4 text-[11px]">
-          <button @click="navigateTo('view-organizer-reg')" class="hover:underline text-accent">Daftar Jadi Organizer</button>
-          <span>|</span>
-          <span>Hari ini: <span>{{ currentDate }}</span></span>
-        </div>
-      </div>
 
       <!-- HEADER & NAVBAR -->
-      <header class="sticky top-0 z-40 bg-paper nb-border-b">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          
-          <!-- LOGO -->
-          <button @click="navigateTo('view-home')" class="flex items-center space-x-2 group text-left">
-            <div class="bg-ink text-paper font-black px-2 py-1 text-xl tracking-tighter nb-border group-hover:bg-accent group-hover:text-ink transition-colors">
-              INFO
-            </div>
-            <div class="font-black text-xl tracking-tighter leading-tight">
-              MUSIK<br><span class="text-xs bg-accent px-1 border border-ink tracking-widest uppercase">BDG</span>
-            </div>
-          </button>
-
-          <!-- DESKTOP NAV LINKS -->
-          <nav class="hidden md:flex items-center space-x-6 text-sm font-bold uppercase tracking-tight">
-            <button @click="navigateTo('view-home')" :class="{ 'bg-accent border-ink': currentView === 'view-home' }" class="hover:bg-accent px-2 py-1 transition-colors border-b-2 border-transparent hover:border-ink">Beranda</button>
-            <button @click="navigateTo('view-events')" :class="{ 'bg-accent border-ink': currentView === 'view-events' }" class="hover:bg-accent px-2 py-1 transition-colors border-b-2 border-transparent hover:border-ink">Event</button>
-            <button @click="filterCategoryQuick('Indie')" class="hover:bg-accent px-2 py-1 transition-colors border-b-2 border-transparent hover:border-ink">Gigs</button>
-            <button @click="navigateTo('view-community')" :class="{ 'bg-accent border-ink': currentView === 'view-community' }" class="hover:bg-accent px-2 py-1 transition-colors border-b-2 border-transparent hover:border-ink">Komunitas</button>
-            <button @click="navigateTo('view-organizer-reg')" :class="{ 'bg-accent border-ink': currentView === 'view-organizer-reg' }" class="hover:bg-accent px-2 py-1 transition-colors border-b-2 border-transparent hover:border-ink">Organizer</button>
-          </nav>
-
-          <!-- RIGHT NAV ACTIONS -->
-          <div class="hidden md:flex items-center space-x-3">
-            <!-- Search Quick Modal Button -->
-            <button @click="isQuickSearchOpen = true" class="p-2 nb-btn nb-btn-secondary" title="Cari Event">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-            </button>
-
-            <!-- Favorites Button -->
-            <button @click="navigateTo('view-favorites')" class="p-2 nb-btn nb-btn-secondary relative" title="Favorit">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.684a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
-              <span v-if="favorites.length > 0" class="absolute -top-1 -right-1 bg-accent text-ink text-[10px] font-black w-4 h-4 flex items-center justify-center nb-border">
-                {{ favorites.length }}
-              </span>
-            </button>
-
-            <!-- User Auth States -->
-            <div class="flex items-center space-x-2">
-              <template v-if="!isLoggedIn">
-                <button @click="navigateTo('view-login')" class="px-3 py-1.5 text-xs uppercase nb-btn nb-btn-secondary">Masuk</button>
-                <button @click="navigateTo('view-signup')" class="px-3 py-1.5 text-xs uppercase nb-btn nb-btn-primary">Daftar</button>
-              </template>
-              <template v-else>
-                <button @click="navigateTo('view-my-tickets')" class="px-3 py-1.5 text-xs uppercase nb-btn nb-btn-secondary">Tiket Saya</button>
-                <button @click="logout" class="px-3 py-1.5 text-xs uppercase nb-btn nb-btn-dark">Keluar</button>
-              </template>
-            </div>
-          </div>
-
-          <!-- MOBILE HAMBURGER BUTTON -->
-          <div class="flex md:hidden items-center space-x-2">
-            <button @click="isMobileMenuOpen = !isMobileMenuOpen" class="p-2 nb-btn nb-btn-secondary">
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 6h16M4 12h16M4 18h16"/></svg>
-            </button>
-          </div>
-
-        </div>
-
-        <!-- MOBILE MENU PANEL -->
-        <div v-if="isMobileMenuOpen" class="md:hidden bg-paper nb-border-b px-4 py-4 space-y-3">
-          <div class="flex flex-col space-y-2 text-sm font-bold uppercase">
-            <button @click="navigateTo('view-home'); isMobileMenuOpen = false" class="p-2 text-left hover:bg-accent border border-ink">Beranda</button>
-            <button @click="navigateTo('view-events'); isMobileMenuOpen = false" class="p-2 text-left hover:bg-accent border border-ink">Semua Event</button>
-            <button @click="navigateTo('view-my-tickets'); isMobileMenuOpen = false" class="p-2 text-left hover:bg-accent border border-ink">Tiket Saya</button>
-            <button @click="navigateTo('view-favorites'); isMobileMenuOpen = false" class="p-2 text-left hover:bg-accent border border-ink">Event Favorit ({{ favorites.length }})</button>
-            <button @click="navigateTo('view-community'); isMobileMenuOpen = false" class="p-2 text-left hover:bg-accent border border-ink">Komunitas BDG</button>
-            <button @click="navigateTo('view-organizer-reg'); isMobileMenuOpen = false" class="p-2 text-left bg-beige hover:bg-accent border border-ink">Dashboard Organizer</button>
-          </div>
-          <div class="pt-2 border-t border-ink flex space-x-2">
-            <template v-if="!isLoggedIn">
-              <button @click="navigateTo('view-login'); isMobileMenuOpen = false" class="flex-1 py-2 text-xs uppercase nb-btn nb-btn-secondary">Masuk</button>
-              <button @click="navigateTo('view-signup'); isMobileMenuOpen = false" class="flex-1 py-2 text-xs uppercase nb-btn nb-btn-primary">Daftar</button>
-            </template>
-            <template v-else>
-              <button @click="logout(); isMobileMenuOpen = false" class="w-full py-2 text-xs uppercase nb-btn nb-btn-dark">Keluar ({{ currentUser.name }})</button>
-            </template>
-          </div>
-        </div>
-      </header>
+      <Navbar
+        :currentView="currentView"
+        :favoritesCount="favorites.length"
+        @navigate="navigateTo"
+        @open-search="isQuickSearchOpen = true"
+        @filter-category="filterCategoryQuick"
+      />
 
       <!-- QUICK SEARCH OVERLAY -->
       <div v-if="isQuickSearchOpen" class="fixed inset-0 bg-ink/70 z-50 flex items-start justify-center pt-20 px-4">
@@ -157,21 +75,16 @@
               <!-- HERO RIGHT VISUAL -->
               <div class="lg:col-span-5 relative">
                 <div class="relative z-10 nb-card bg-white p-3 rotate-1 transform hover:rotate-0 transition-transform">
-                  <img src="https://images.unsplash.com/photo-1501386761578-eac5c94b800a?auto=format&fit=crop&w=800&q=80" alt="Bandung Live Music Scene" class="w-full h-64 sm:h-80 object-cover nb-border">
+                  <img src="/src/assets/deftones.webp" alt="Bandung Live Music Scene" class="w-full h-64 sm:h-80 object-cover nb-border">
                   <div class="mt-3 flex justify-between items-center">
                     <div>
-                      <div class="font-black text-base uppercase">BANDUNG INDIE NIGHT 2026</div>
-                      <div class="text-xs font-semibold text-muted">📍 Gudang Selatan, Bandung</div>
+                      <div class="font-black text-base uppercase">Deftones In Bandung!!</div>
+                      <div class="text-xs font-semibold text-muted">📍 Sekeawi Sukamenak, KAB.Bandung</div>
                     </div>
                     <button @click="openEventDetail('event-1')" class="nb-btn nb-btn-primary text-xs px-3 py-1.5 uppercase">Beli Tiket</button>
                   </div>
                 </div>
 
-                <div class="absolute -bottom-6 -left-6 z-20 hidden sm:block nb-card bg-accent p-3 max-w-xs -rotate-3">
-                  <div class="text-xs font-black uppercase">🎙️ UPCOMING VENUE Spotlight</div>
-                  <div class="text-sm font-bold">LASWI HERITAGE BANDUNG</div>
-                  <p class="text-[11px] text-ink/80 font-medium">3 event besar bulan ini. Siapkan energimu!</p>
-                </div>
               </div>
 
             </div>
@@ -341,7 +254,7 @@
                     <span>Rp {{ formatNumber(ticket.price) }}</span>
                   </div>
                   <p class="text-xs font-medium text-muted">{{ ticket.desc }}</p>
-                  <button @click="startCheckout(selectedEvent, ticket)" class="nb-btn nb-btn-primary w-full py-1.5 text-xs uppercase mt-2">
+                  <button @click="openCheckoutModal(selectedEvent, ticket)" class="nb-btn nb-btn-primary w-full py-1.5 text-xs uppercase mt-2">
                     Pilih Tiket Ini
                   </button>
                 </div>
@@ -389,54 +302,364 @@
               <h3 class="font-black text-lg uppercase">{{ t.eventTitle }}</h3>
               <div class="text-xs font-semibold">📍 {{ t.venue }} • {{ t.date }}</div>
               <div class="text-xs font-bold text-muted">Kategori: {{ t.ticketTier }} ({{ t.qty }} Tiket)</div>
-              <button @click="showETicketModal(t)" class="nb-btn nb-btn-dark w-full py-2 text-xs uppercase">Tampilkan QR Code / E-Ticket</button>
             </div>
           </div>
         </section>
 
+        <!-- VIEW 6: MY PROFILE -->
+        <section v-if="currentView === 'view-profile'" class="max-w-3xl mx-auto px-4 py-8 space-y-6">
+          <h1 class="text-3xl font-black uppercase tracking-tight border-b-2 border-ink pb-4">PROFIL SAYA</h1>
+          <div class="nb-card bg-white p-6 space-y-4">
+            <div class="flex items-center gap-4 border-b-2 border-ink pb-4">
+              <div class="w-16 h-16 bg-accent border-2 border-ink flex items-center justify-center text-2xl font-black">
+                <i class="fa-solid fa-user"></i>
+              </div>
+              <div>
+                <h2 class="text-xl font-black uppercase">{{ currentUser?.name || 'USER' }}</h2>
+                <p class="text-sm font-medium text-muted">{{ currentUser?.email }}</p>
+                <span v-if="currentUser?.role" class="inline-block mt-1 px-2 py-0.5 text-xs font-black uppercase bg-accent border border-ink">
+                  Role: {{ currentUser.role }}
+                </span>
+              </div>
+            </div>
+
+            <div class="space-y-3 pt-2">
+              <div>
+                <label class="block text-xs font-black uppercase mb-1">Nama Lengkap</label>
+                <input type="text" :value="currentUser?.name" readonly class="nb-input w-full bg-paper/50">
+              </div>
+              <div>
+                <label class="block text-xs font-black uppercase mb-1">Email</label>
+                <input type="email" :value="currentUser?.email" readonly class="nb-input w-full bg-paper/50">
+              </div>
+              <div>
+                <label class="block text-xs font-black uppercase mb-1">Role Akun</label>
+                <input type="text" :value="currentUser?.role || 'user'" readonly class="nb-input w-full bg-paper/50 uppercase font-bold">
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- VIEW 7: ADMIN DASHBOARD -->
+        <section v-if="currentView === 'view-admin'" class="max-w-5xl mx-auto px-4 py-8 space-y-6">
+          <div v-if="currentUser?.role === 'admin'" class="space-y-6">
+            <h1 class="text-3xl font-black uppercase tracking-tight border-b-2 border-ink pb-4 flex items-center gap-2">
+              <i class="fa-solid fa-shield-halved"></i> HALAMAN ADMIN
+            </h1>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div class="nb-card bg-accent p-4 border-2 border-ink space-y-1">
+                <div class="text-xs font-black uppercase">Total Event</div>
+                <div class="text-3xl font-black">{{ events.length }}</div>
+              </div>
+              <div class="nb-card bg-white p-4 border-2 border-ink space-y-1">
+                <div class="text-xs font-black uppercase">Role Status</div>
+                <div class="text-3xl font-black uppercase text-green-600">ADMIN</div>
+              </div>
+              <div class="nb-card bg-white p-4 border-2 border-ink space-y-1">
+                <div class="text-xs font-black uppercase">Tiket Terjual</div>
+                <div class="text-3xl font-black">{{ myTickets.length }}</div>
+              </div>
+            </div>
+            <div class="nb-card bg-white p-6 space-y-4">
+              <h3 class="font-black text-lg uppercase border-b-2 border-ink pb-2">Manajemen Platform</h3>
+              <p class="text-sm font-medium">Selamat datang di Panel Kontrol Admin Info Musik BDG.</p>
+            </div>
+          </div>
+          <div v-else class="nb-card bg-red-100 p-8 text-center space-y-4 border-2 border-red-500">
+            <h2 class="text-2xl font-black text-red-600 uppercase">AKSES DITOLAK</h2>
+            <p class="font-bold text-sm">Halaman ini hanya dapat diakses oleh user dengan role Admin.</p>
+            <button @click="navigateTo('view-home')" class="nb-btn nb-btn-primary px-4 py-2 text-xs uppercase">Kembali ke Beranda</button>
+          </div>
+        </section>
+
+        <!-- VIEW 8: PESANAN SAYA -->
+        <section v-if="currentView === 'view-pesanan'" class="max-w-6xl mx-auto px-4 py-8 space-y-6">
+          <div class="flex justify-between items-center border-b-2 border-ink pb-4">
+            <div>
+              <div class="text-xs font-bold uppercase tracking-widest text-muted">RIWAYAT TRANSAKSI</div>
+              <h1 class="text-3xl font-black uppercase tracking-tight">PESANAN SAYA</h1>
+            </div>
+            <button @click="getUserOrders" class="nb-btn nb-btn-secondary px-3 py-1 text-xs uppercase flex items-center gap-1">
+              <i class="fa-solid fa-rotate"></i> Refresh
+            </button>
+          </div>
+
+          <div v-if="userOrdersLoading" class="text-center py-12">
+            <div class="inline-block w-8 h-8 border-4 border-ink border-t-accent rounded-full animate-spin"></div>
+            <p class="font-black text-sm uppercase mt-2">Memuat Data Pesanan...</p>
+          </div>
+
+          <div v-else-if="userOrders.length === 0" class="nb-card bg-white p-8 text-center space-y-4">
+            <p class="font-bold text-muted uppercase">Belum ada pesanan tiket.</p>
+            <button @click="navigateTo('view-events')" class="nb-btn nb-btn-primary px-4 py-2 text-xs uppercase">Beli Tiket Sekarang</button>
+          </div>
+
+          <div v-else class="space-y-4">
+            <div v-for="order in userOrders" :key="order.id" class="nb-card bg-white p-6 space-y-4">
+              <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-ink/20 pb-3">
+                <div>
+                  <span class="text-xs font-bold text-muted uppercase">Kode Pesanan:</span>
+                  <span class="font-mono font-black ml-2 text-sm">{{ order.kode_pesanan }}</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="text-xs font-bold text-muted uppercase">Tanggal Pesan:</span>
+                  <span class="text-xs font-bold">{{ formatDate(order.created_at) }}</span>
+                </div>
+              </div>
+
+              <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                  <div class="text-xs font-bold uppercase text-muted">Total Pembayaran:</div>
+                  <div class="text-2xl font-black text-ink">Rp {{ formatNumber(order.total_harga) }}</div>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-2">
+                  <span
+                    class="px-3 py-1 text-xs font-black uppercase border border-ink"
+                    :class="{
+                      'bg-yellow-300': order.status === 'pending',
+                      'bg-green-300': order.status === 'dibayar',
+                      'bg-red-300': order.status === 'dibatalkan'
+                    }"
+                  >
+                    {{ order.status }}
+                  </span>
+
+                  <button @click="openUserOrderDetail(order)" class="nb-btn nb-btn-secondary px-3 py-1.5 text-xs uppercase">
+                    Detail Pesanan
+                  </button>
+
+                  <button
+                    v-if="order.status === 'pending'"
+                    @click="payWithMidtrans(order)"
+                    class="nb-btn nb-btn-primary px-4 py-1.5 text-xs uppercase"
+                  >
+                    Bayar Sekarang (Midtrans)
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- MODAL DETAIL PESANAN -->
+          <div v-if="showUserOrderDetailModal && selectedUserOrderDetail" class="fixed inset-0 bg-ink/70 z-50 flex items-center justify-center p-4 overflow-y-auto">
+            <div class="nb-card bg-paper w-full max-w-2xl p-6 relative space-y-6 my-8">
+              <button @click="closeUserOrderDetail" class="absolute top-4 right-4 font-black text-xl hover:bg-accent px-2 border border-ink">✕</button>
+
+              <div class="border-b-2 border-ink pb-3">
+                <span class="bg-accent px-2 py-0.5 text-xs font-black border border-ink uppercase">Rincian Transaksi</span>
+                <h2 class="text-2xl font-black uppercase mt-1">DETAIL PESANAN #{{ selectedUserOrderDetail.kode_pesanan }}</h2>
+              </div>
+
+              <!-- INFORMASI PEMESAN -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-white p-4 nb-border">
+                <div>
+                  <div class="text-xs font-bold uppercase text-muted">Nama Pemesan</div>
+                  <div class="font-black text-sm uppercase">{{ selectedUserOrderDetail.user?.name || currentUser?.name }}</div>
+                </div>
+                <div>
+                  <div class="text-xs font-bold uppercase text-muted">Email Pemesan</div>
+                  <div class="font-semibold text-sm">{{ selectedUserOrderDetail.user?.email || currentUser?.email }}</div>
+                </div>
+                <div>
+                  <div class="text-xs font-bold uppercase text-muted">Tanggal Pesanan</div>
+                  <div class="font-bold text-sm">{{ formatDate(selectedUserOrderDetail.created_at) }}</div>
+                </div>
+                <div>
+                  <div class="text-xs font-bold uppercase text-muted">Status Pembayaran</div>
+                  <span
+                    class="inline-block px-2 py-0.5 text-xs font-black uppercase border border-ink mt-0.5"
+                    :class="{
+                      'bg-yellow-300': selectedUserOrderDetail.status === 'pending',
+                      'bg-green-300': selectedUserOrderDetail.status === 'dibayar',
+                      'bg-red-300': selectedUserOrderDetail.status === 'dibatalkan'
+                    }"
+                  >
+                    {{ selectedUserOrderDetail.status }}
+                  </span>
+                </div>
+                <div v-if="selectedUserOrderDetail.payment?.dibayar_pada">
+                  <div class="text-xs font-bold uppercase text-muted">Tanggal Bayar</div>
+                  <div class="font-bold text-sm text-green-700">{{ formatDate(selectedUserOrderDetail.payment.dibayar_pada) }}</div>
+                </div>
+              </div>
+
+              <!-- ITEM PESANAN -->
+              <div class="space-y-2">
+                <h3 class="font-black text-sm uppercase">Item Tiket Dipesan:</h3>
+                <div class="overflow-x-auto">
+                  <table class="w-full text-left border-collapse border-2 border-ink bg-white text-xs">
+                    <thead class="bg-accent border-b-2 border-ink">
+                      <tr>
+                        <th class="p-2 border-r border-ink uppercase">Event & Tiket</th>
+                        <th class="p-2 border-r border-ink uppercase text-center">Jumlah</th>
+                        <th class="p-2 border-r border-ink uppercase text-right">Harga Satuan</th>
+                        <th class="p-2 uppercase text-right">Sub Total</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="item in selectedUserOrderDetail.order_details" :key="item.id" class="border-b border-ink/20">
+                        <td class="p-2 border-r border-ink">
+                          <div class="font-black uppercase">{{ item.ticket?.event?.nama_event || 'Event' }}</div>
+                          <div class="text-muted font-bold">{{ item.ticket?.nama_tiket || 'Tiket' }}</div>
+                        </td>
+                        <td class="p-2 border-r border-ink text-center font-bold">{{ item.jumlah }}</td>
+                        <td class="p-2 border-r border-ink text-right font-medium">Rp {{ formatNumber(item.harga_satuan) }}</td>
+                        <td class="p-2 text-right font-black">Rp {{ formatNumber(item.subtotal) }}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- TOTAL HARGA -->
+              <div class="flex justify-between items-center pt-2 border-t-2 border-ink">
+                <span class="font-black text-lg uppercase">TOTAL HARGA:</span>
+                <span class="font-black text-2xl text-ink">Rp {{ formatNumber(selectedUserOrderDetail.total_harga) }}</span>
+              </div>
+
+              <!-- ACTION BUTTON IN MODAL -->
+              <div class="flex justify-end gap-2 pt-2">
+                <button @click="closeUserOrderDetail" class="nb-btn nb-btn-secondary px-4 py-2 text-xs uppercase">Tutup</button>
+                <button
+                  v-if="selectedUserOrderDetail.status === 'pending'"
+                  @click="payWithMidtrans(selectedUserOrderDetail); closeUserOrderDetail()"
+                  class="nb-btn nb-btn-primary px-4 py-2 text-xs uppercase"
+                >
+                  Bayar Sekarang (Midtrans)
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- MODAL FORM PEMESANAN TIKET (HOME) -->
+        <div v-if="showCheckoutModal && checkoutTicketData" class="fixed inset-0 bg-ink/70 z-50 flex items-center justify-center p-4 overflow-y-auto">
+          <div class="nb-card bg-paper w-full max-w-lg p-6 relative space-y-6 my-8">
+            <button @click="showCheckoutModal = false" class="absolute top-4 right-4 font-black text-xl hover:bg-accent px-2 border border-ink">✕</button>
+
+            <div class="border-b-2 border-ink pb-3">
+              <span class="bg-accent px-2 py-0.5 text-xs font-black border border-ink uppercase">Form Pemesanan Tiket</span>
+              <h2 class="text-2xl font-black uppercase mt-1">{{ checkoutEventData?.title || checkoutEventData?.nama_event }}</h2>
+              <p class="text-xs font-bold text-muted mt-0.5">Tier Tiket: <span class="text-ink font-black">{{ checkoutTicketData.name || checkoutTicketData.nama_tiket }}</span></p>
+            </div>
+
+            <form @submit.prevent="processCheckoutPayment" class="space-y-4">
+              <div>
+                <label class="block text-xs font-black uppercase mb-1">Nama Pemesan</label>
+                <input type="text" v-model="checkoutForm.name" required class="nb-input w-full" placeholder="Nama lengkap pemesan">
+              </div>
+
+              <div>
+                <label class="block text-xs font-black uppercase mb-1">Email Pemesan</label>
+                <input type="email" v-model="checkoutForm.email" required class="nb-input w-full" placeholder="email@domain.com">
+              </div>
+
+              <div>
+                <label class="block text-xs font-black uppercase mb-1">Jumlah Tiket</label>
+                <div class="flex items-center gap-2">
+                  <button
+                    type="button"
+                    @click="checkoutForm.jumlah = Math.max(1, checkoutForm.jumlah - 1)"
+                    class="nb-btn nb-btn-secondary px-3 py-1 text-lg font-black"
+                  >-</button>
+                  <input
+                    type="number"
+                    v-model.number="checkoutForm.jumlah"
+                    min="1"
+                    :max="checkoutTicketData.stock || checkoutTicketData.stok || 100"
+                    required
+                    class="nb-input text-center font-black text-lg w-24"
+                  >
+                  <button
+                    type="button"
+                    @click="checkoutForm.jumlah = Math.min((checkoutTicketData.stock || checkoutTicketData.stok || 100), checkoutForm.jumlah + 1)"
+                    class="nb-btn nb-btn-secondary px-3 py-1 text-lg font-black"
+                  >+</button>
+                  <span v-if="checkoutTicketData.stock || checkoutTicketData.stok" class="text-xs font-bold text-muted ml-2">
+                    (Sisa Stok: {{ checkoutTicketData.stock || checkoutTicketData.stok }})
+                  </span>
+                </div>
+              </div>
+
+              <div class="nb-card bg-white p-4 space-y-2 border-2 border-ink">
+                <div class="flex justify-between text-xs font-bold text-muted uppercase">
+                  <span>Harga Satuan</span>
+                  <span>Rp {{ formatNumber(checkoutTicketData.price || checkoutTicketData.harga) }}</span>
+                </div>
+                <div class="flex justify-between text-xs font-bold text-muted uppercase">
+                  <span>Jumlah Tiket</span>
+                  <span>{{ checkoutForm.jumlah }} Tiket</span>
+                </div>
+                <div class="flex justify-between items-center text-base font-black border-t-2 border-ink pt-2 text-ink">
+                  <span>SUB TOTAL</span>
+                  <span class="text-xl">Rp {{ formatNumber(checkoutSubtotal) }}</span>
+                </div>
+              </div>
+
+              <div class="flex justify-end gap-2 pt-2">
+                <button type="button" @click="showCheckoutModal = false" class="nb-btn nb-btn-secondary px-4 py-2 text-xs uppercase">Batal</button>
+                <button
+                  type="submit"
+                  :disabled="loading"
+                  class="nb-btn nb-btn-primary px-6 py-2.5 text-xs font-black uppercase flex items-center gap-2"
+                >
+                  <i class="fa-solid fa-credit-card"></i>
+                  <span>{{ loading ? 'Memproses...' : 'Lanjut Bayar' }}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
       </main>
 
       <!-- FOOTER -->
-      <footer class="bg-ink text-paper nb-border-t py-8 px-4 sm:px-6 lg:px-8 mt-12">
-        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4 text-center md:text-left">
-          <div>
-            <div class="font-black text-xl tracking-tighter">INFO MUSIK BDG</div>
-            <p class="text-xs text-paper/70 font-medium">Temukan Musikmu di Bandung. Platform ticketing & direktori gigs lokal.</p>
-          </div>
-          <div class="text-xs font-bold uppercase space-x-4">
-            <button @click="navigateTo('view-home')" class="hover:underline">Beranda</button>
-            <button @click="navigateTo('view-events')" class="hover:underline">Event</button>
-            <button @click="navigateTo('view-organizer-reg')" class="hover:underline">Organizer</button>
-          </div>
-          <div class="text-[11px] text-paper/50 font-mono">
-            © 2026 INFO MUSIK BDG. ALL RIGHTS RESERVED.
-          </div>
-        </div>
-      </footer>
+      <Footer @navigate="navigateTo" />
     </div>
   </template>
 
   <script>
   import api from '../utils/api'
+  import Navbar from '../components/Navbar.vue'
+  import Footer from '../components/Footer.vue'
+  import { showFlash } from '../utils/flash'
 
   export default {
-    name: 'App',
+    name: 'HomeView',
+
+    components: {
+      Navbar,
+      Footer
+    },
 
     data() {
+      let savedUser = null
+      try {
+        const user = localStorage.getItem('user')
+        if (user) {
+          savedUser = JSON.parse(user)
+        }
+      } catch (error) {
+        console.error('Gagal membaca user dari localStorage:', error)
+      }
+
       return {
         currentView: 'view-home',
 
         isMobileMenuOpen: false,
         isQuickSearchOpen: false,
+        isProfileMenuOpen: false,
         quickSearchQuery: '',
 
         currentDate: '12 Sep 2026',
 
         isLoggedIn: !!localStorage.getItem('token'),
 
-        currentUser: {
+        currentUser: savedUser || {
           name: 'Pengunjung BDG',
-          email: 'pengunjung@bdg.id'
+          email: 'pengunjung@bdg.id',
+          role: 'user'
         },
 
         favorites: [],
@@ -461,6 +684,22 @@
         // TIKET DARI BACKEND
         myTickets: [],
 
+        // PESANAN DARI BACKEND
+        userOrders: [],
+        userOrdersLoading: false,
+        selectedUserOrderDetail: null,
+        showUserOrderDetailModal: false,
+
+        // MODAL CHECKOUT
+        showCheckoutModal: false,
+        checkoutEventData: null,
+        checkoutTicketData: null,
+        checkoutForm: {
+          name: '',
+          email: '',
+          jumlah: 1
+        },
+
         loginForm: {
           email: '',
           password: ''
@@ -469,6 +708,13 @@
     },
 
     computed: {
+      checkoutSubtotal() {
+        if (!this.checkoutTicketData) return 0
+        const unitPrice = Number(this.checkoutTicketData.price || this.checkoutTicketData.harga) || 0
+        const qty = Number(this.checkoutForm.jumlah) || 1
+        return unitPrice * qty
+      },
+
       filteredEvents() {
         let result = this.events.filter(event => {
           const keyword = this.filters.keyword.toLowerCase()
@@ -530,17 +776,58 @@
     },
 
     async mounted() {
+      // Load user dari localStorage
+      this.loadUser()
+
       // Ambil event dari backend ketika website dibuka
       await this.getEvents()
 
       // Cek apakah user sudah login
-      if (localStorage.getItem('token')) {
+      if (this.isLoggedIn) {
         await this.getProfile()
         await this.getMyTickets()
+        await this.getUserOrders()
       }
+
+      document.addEventListener('click', this.handleDocumentClick)
+    },
+
+    beforeUnmount() {
+      document.removeEventListener('click', this.handleDocumentClick)
     },
 
     methods: {
+      // ==========================================
+      // LOAD USER
+      // ==========================================
+
+      loadUser() {
+        const token = localStorage.getItem('token')
+        const savedUser = localStorage.getItem('user')
+
+        this.isLoggedIn = !!token
+
+        if (!savedUser) {
+          this.currentUser = null
+          return
+        }
+
+        try {
+          this.currentUser = JSON.parse(savedUser)
+        } catch (error) {
+          console.error('User localStorage tidak valid:', error)
+          this.currentUser = null
+        }
+      },
+
+      // ==========================================
+      // CLOSE DROPDOWN
+      // ==========================================
+
+      handleDocumentClick() {
+        this.isProfileMenuOpen = false
+      },
+
       // ==========================================
       // GET EVENT
       // GET /api/events
@@ -625,44 +912,9 @@ async getEvents() {
       // GET /api/events/{id}
       // ==========================================
 
-      async openEventDetail(eventId) {
-        this.loading = true
-
-        try {
-          const response = await api.get(
-            `/events/${eventId}`
-          )
-
-          console.log(
-            'Response detail event:',
-            response.data
-          )
-
-          this.selectedEvent =
-            response.data.data ||
-            response.data
-
-          this.selectedTicketTier = null
-
-          this.currentView = 'view-detail'
-
-          window.scrollTo({
-            top: 0,
-            behavior: 'smooth'
-          })
-
-        } catch (error) {
-          console.error(
-            'Gagal mengambil detail event:',
-            error
-          )
-
-          alert(
-            error.response?.data?.message ||
-            'Gagal mengambil detail event.'
-          )
-        } finally {
-          this.loading = false
+      openEventDetail(eventId) {
+        if (eventId) {
+          this.$router.push(`/event/${eventId}`)
         }
       },
 
@@ -688,10 +940,13 @@ async getEvents() {
 
           if (user) {
             this.currentUser = {
+              id: user.id,
               name: user.name || user.nama || 'Pengunjung BDG',
-              email: user.email || ''
+              email: user.email || '',
+              role: user.role || 'user'
             }
 
+            localStorage.setItem('user', JSON.stringify(this.currentUser))
             this.isLoggedIn = true
           }
 
@@ -703,7 +958,9 @@ async getEvents() {
 
           if (error.response?.status === 401) {
             localStorage.removeItem('token')
+            localStorage.removeItem('user')
             this.isLoggedIn = false
+            this.currentUser = null
           }
         }
       },
@@ -715,73 +972,67 @@ async getEvents() {
       // ==========================================
 
       async handleLogin() {
-        this.loading = true
+  this.loading = true
 
-        try {
-          const response = await api.post('/login', {
-            email: this.loginForm.email,
-            password: this.loginForm.password
-          })
+  try {
+    const response = await api.post('/login', {
+      email: this.loginForm.email,
+      password: this.loginForm.password
+    })
 
-          console.log(
-            'Response login:',
-            response.data
-          )
+    console.log('Response login:', response.data)
 
-          /*
-          * Token Laravel
-          */
-          const token =
-            response.data.token ||
-            response.data.access_token ||
-            response.data.data?.token
+    // Token dari AuthController Laravel
+    const token = response.data.data?.token
 
-          if (!token) {
-            alert('Login berhasil tetapi token tidak ditemukan.')
-            return
-          }
+    if (!token) {
+      showFlash('Token tidak ditemukan.', 'error', 'LOGIN GAGAL!')
+      return
+    }
 
-          // Simpan token
-          localStorage.setItem('token', token)
+    // Simpan token
+    localStorage.setItem('token', token)
 
-          this.isLoggedIn = true
+    // Simpan status login
+    this.isLoggedIn = true
 
-          // Ambil data user dari response
-          const user =
-            response.data.user ||
-            response.data.data?.user
+    // Ambil user dari response Laravel
+    const user = response.data.data?.user
 
-          if (user) {
-            this.currentUser = {
-              name: user.name || user.nama || 'Pengunjung BDG',
-              email: user.email || ''
-            }
-          } else {
-            // Kalau login tidak mengembalikan user,
-            // ambil profile dari backend
-            await this.getProfile()
-          }
+    if (user) {
+      this.currentUser = {
+        id: user.id,
+        name: user.name || 'Pengunjung BDG',
+        email: user.email || '',
+        role: user.role || 'user'
+      }
 
-          alert('Login berhasil!')
+      localStorage.setItem('user', JSON.stringify(this.currentUser))
+    }
 
-          this.loginForm.password = ''
+    // Bersihkan password
+    this.loginForm.password = ''
 
-          this.navigateTo('view-home')
+    showFlash(`Selamat datang kembali, ${this.currentUser.name}!`, 'success', 'LOGIN BERHASIL!')
 
-        } catch (error) {
-          console.error(
-            'Login gagal:',
-            error
-          )
+    // Pindah ke halaman utama
+    this.navigateTo('view-home')
 
-          alert(
-            error.response?.data?.message ||
-            'Email atau password salah.'
-          )
-        } finally {
-          this.loading = false
-        }
-      },
+    // Ambil tiket user
+    await this.getMyTickets()
+
+  } catch (error) {
+    console.error('Login gagal:', error)
+
+    showFlash(
+      error.response?.data?.message || 'Email atau password salah.',
+      'error',
+      'LOGIN GAGAL!'
+    )
+  } finally {
+    this.loading = false
+  }
+},
 
 
       // ==========================================
@@ -798,17 +1049,15 @@ async getEvents() {
             error
           )
         } finally {
-          // Hapus token walaupun request logout gagal
+          // Hapus token & user walaupun request logout gagal
           localStorage.removeItem('token')
+          localStorage.removeItem('user')
 
           this.isLoggedIn = false
-
-          this.currentUser = {
-            name: 'Pengunjung BDG',
-            email: 'pengunjung@bdg.id'
-          }
-
+          this.currentUser = null
           this.myTickets = []
+          this.isProfileMenuOpen = false
+          this.isMobileMenuOpen = false
 
           this.navigateTo('view-home')
         }
@@ -847,58 +1096,182 @@ async getEvents() {
 
 
       // ==========================================
-      // BELI / PESAN TIKET
-      // POST /api/orders
+      // PESANAN USER & MIDTRANS
       // ==========================================
 
-      async startCheckout(event, ticket) {
-        // Harus login
+      async getUserOrders() {
+        if (!this.isLoggedIn) return
+        this.userOrdersLoading = true
+        try {
+          const userId = this.currentUser?.id
+          const response = await api.get('/orders', {
+            params: userId ? { user_id: userId } : {}
+          })
+          this.userOrders = response.data.data || []
+        } catch (error) {
+          console.error('Gagal mengambil data pesanan:', error)
+          this.userOrders = []
+        } finally {
+          this.userOrdersLoading = false
+        }
+      },
+
+      openUserOrderDetail(order) {
+        this.selectedUserOrderDetail = order
+        this.showUserOrderDetailModal = true
+      },
+
+      closeUserOrderDetail() {
+        this.showUserOrderDetailModal = false
+        this.selectedUserOrderDetail = null
+      },
+
+      async payWithMidtrans(order) {
+        try {
+          const response = await api.post('/payments/snap-token', {
+            order_id: order.id
+          })
+
+          const snapToken = response.data.snap_token
+
+          if (!snapToken) {
+            showFlash('Gagal mendapatkan token pembayaran Midtrans.', 'error', 'PEMBAYARAN GAGAL')
+            return
+          }
+
+          if (window.snap) {
+            window.snap.pay(snapToken, {
+              onSuccess: async (result) => {
+                console.log('Payment success:', result)
+                await api.post('/payments/finish', {
+                  order_id: order.id,
+                  status: 'berhasil',
+                  metode_pembayaran: result.payment_type || 'Midtrans'
+                })
+                showFlash('Pembayaran Anda telah berhasil diproses!', 'success', 'PEMBAYARAN BERHASIL')
+                await this.getUserOrders()
+                await this.getMyTickets()
+              },
+              onPending: async (result) => {
+                console.log('Payment pending:', result)
+                showFlash('Pembayaran pending, silakan selesaikan pembayaran Anda.', 'warning', 'PEMBAYARAN PENDING')
+                await this.getUserOrders()
+              },
+              onError: async (result) => {
+                console.error('Payment error:', result)
+                showFlash('Pembayaran gagal atau dibatalkan.', 'error', 'PEMBAYARAN GAGAL')
+                await this.getUserOrders()
+              },
+              onClose: async () => {
+                console.log('Snap modal closed')
+                await this.getUserOrders()
+              }
+            })
+          } else {
+            showFlash('SDK Midtrans belum dimuat.', 'error', 'MIDTRANS ERROR')
+          }
+        } catch (error) {
+          console.error('Gagal memproses Midtrans:', error)
+          showFlash(error.response?.data?.message || 'Gagal memproses pembayaran Midtrans.', 'error', 'PEMBAYARAN GAGAL')
+        }
+      },
+
+      formatDate(dateStr) {
+        if (!dateStr) return '-'
+        try {
+          const d = new Date(dateStr)
+          return d.toLocaleString('id-ID', {
+            day: 'numeric',
+            month: 'short',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          })
+        } catch (e) {
+          return dateStr
+        }
+      },
+
+      openCheckoutModal(event, ticket) {
         if (!this.isLoggedIn) {
-          alert(
-            'Silakan login terlebih dahulu untuk membeli tiket.'
-          )
-
+          showFlash('Silakan login terlebih dahulu untuk membeli tiket.', 'warning', 'LOGIN DIPERLUKAN')
           this.navigateTo('view-login')
+          return
+        }
 
+        this.checkoutEventData = event
+        this.checkoutTicketData = ticket
+        this.checkoutForm = {
+          name: this.currentUser?.name || '',
+          email: this.currentUser?.email || '',
+          jumlah: 1
+        }
+        this.showCheckoutModal = true
+      },
+
+      async processCheckoutPayment() {
+        if (!this.checkoutForm.name || !this.checkoutForm.email) {
+          showFlash('Nama dan email pemesan wajib diisi.', 'warning', 'DATA BELUM LENGKAP')
+          return
+        }
+
+        const stokAvailable = this.checkoutTicketData?.stock || this.checkoutTicketData?.stok
+        if (stokAvailable && this.checkoutForm.jumlah > stokAvailable) {
+          showFlash(`Stok tiket tidak mencukupi. Sisa stok: ${stokAvailable}`, 'warning', 'STOK TIDAK CUKUP')
           return
         }
 
         this.loading = true
 
         try {
+          const savedUser = localStorage.getItem('user')
+          let userId = this.currentUser?.id
+          if (!userId && savedUser) {
+            try {
+              userId = JSON.parse(savedUser).id
+            } catch (e) {}
+          }
+
           const response = await api.post('/orders', {
-            event_id: event.id,
-            ticket_id: ticket.id,
-            jumlah: 1
+            user_id: userId,
+            ticket_id: this.checkoutTicketData.id,
+            jumlah: this.checkoutForm.jumlah
           })
 
-          console.log(
-            'Response order:',
-            response.data
-          )
+          console.log('Response order:', response.data)
+          const newOrder = response.data.data
 
-          alert(
-            `Berhasil memesan tiket ${ticket.name} untuk ${event.title}!`
-          )
+          this.showCheckoutModal = false
+          showFlash(`Berhasil memesan ${this.checkoutForm.jumlah} tiket ${this.checkoutTicketData.name || this.checkoutTicketData.nama_tiket}!`, 'success', 'PESANAN BERHASIL')
 
-          // Ambil tiket terbaru dari backend
+          await this.getUserOrders()
           await this.getMyTickets()
 
-          this.navigateTo('view-my-tickets')
+          this.navigateTo('view-pesanan')
+
+          if (newOrder) {
+            this.payWithMidtrans(newOrder)
+          }
 
         } catch (error) {
-          console.error(
-            'Gagal memesan tiket:',
-            error
-          )
-
-          alert(
-            error.response?.data?.message ||
-            'Gagal melakukan pemesanan tiket.'
+          console.error('Gagal memesan tiket:', error)
+          showFlash(
+            error.response?.data?.message || 'Gagal melakukan pemesanan tiket.',
+            'error',
+            'PEMESANAN GAGAL'
           )
         } finally {
           this.loading = false
         }
+      },
+
+      // ==========================================
+      // BELI / PESAN TIKET
+      // POST /api/orders
+      // ==========================================
+
+      async startCheckout(event, ticket) {
+        this.openCheckoutModal(event, ticket)
       },
 
 
@@ -910,6 +1283,11 @@ async getEvents() {
         this.currentView = viewName
 
         this.isMobileMenuOpen = false
+        this.isProfileMenuOpen = false
+
+        if (viewName === 'view-pesanan') {
+          this.getUserOrders()
+        }
 
         window.scrollTo({
           top: 0,
@@ -999,11 +1377,10 @@ async getEvents() {
       // ==========================================
 
       showETicketModal(ticket) {
-        alert(
-          `E-TICKET VALID\n\n` +
-          `Kode: ${ticket.ticketCode || ticket.kode_tiket}\n` +
-          `Event: ${ticket.eventTitle || ticket.event?.title}\n` +
-          `Atas Nama: ${this.currentUser.name}`
+        showFlash(
+          `Kode: ${ticket.ticketCode || ticket.kode_tiket} • Atas Nama: ${this.currentUser.name}`,
+          'success',
+          'E-TICKET VALID'
         )
       }
     }

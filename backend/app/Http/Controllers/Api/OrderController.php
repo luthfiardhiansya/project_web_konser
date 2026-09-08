@@ -11,15 +11,21 @@ use Illuminate\Support\Str;
 
 class OrderController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $orders = Order::with([
+        $query = Order::with([
             'user',
             'orderDetails.ticket.event',
             'payment'
-        ])
-        ->latest()
-        ->get();
+        ]);
+
+        $userId = $request->user_id ?? $request->user()?->id;
+
+        if ($userId) {
+            $query->where('user_id', $userId);
+        }
+
+        $orders = $query->latest()->get();
 
         return response()->json([
             'status' => true,
@@ -30,6 +36,23 @@ class OrderController extends Controller
 
     public function store(Request $request)
     {
+        $userId = $request->user_id ?? $request->user()?->id;
+
+        if (!$request->has('items') && $request->has('ticket_id')) {
+            $request->merge([
+                'items' => [
+                    [
+                        'ticket_id' => $request->ticket_id,
+                        'jumlah' => (int) ($request->jumlah ?? 1),
+                    ]
+                ]
+            ]);
+        }
+
+        if ($userId) {
+            $request->merge(['user_id' => $userId]);
+        }
+
         $request->validate([
             'user_id' => 'required|exists:users,id',
             'items' => 'required|array|min:1',
