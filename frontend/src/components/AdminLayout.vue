@@ -1,6 +1,7 @@
 <script setup>
 import { RouterLink, useRouter } from 'vue-router'
 import { ref, computed } from 'vue'
+import AdminFlash from './AdminFlash.vue'
 
 const router = useRouter()
 const sidebarOpen = ref(false)
@@ -31,6 +32,7 @@ const closeSidebar = () => {
 
 <template>
   <div class="admin-layout">
+    <AdminFlash />
 
     <!-- Overlay Mobile -->
     <div

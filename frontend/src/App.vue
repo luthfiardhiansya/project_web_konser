@@ -15,7 +15,7 @@
 
 <script>
 
-import FlashMessage from './components/FlashMessage.vue'
+import FlashMessage from './components/HomeFlash.vue'
 
 
 export default {
@@ -83,6 +83,10 @@ export default {
   methods: {
 
     handleFlash(event) {
+
+      if (window.location.pathname.startsWith('/admin')) {
+        return
+      }
 
       if (this.flashTimer) {
 

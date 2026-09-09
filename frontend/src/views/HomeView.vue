@@ -19,13 +19,6 @@
             <input type="text" v-model="quickSearchQuery" @keyup.enter="executeQuickSearch" placeholder="Ketik nama band, venue, atau festival..." class="nb-input flex-1">
             <button @click="executeQuickSearch" class="nb-btn nb-btn-primary px-6">CARI</button>
           </div>
-          <div class="text-xs font-bold uppercase mb-2">PENCARIAN POPULER:</div>
-          <div class="flex flex-wrap gap-2 text-xs font-bold">
-            <button @click="quickFilterTag('Gudang Selatan')" class="nb-badge bg-white hover:bg-accent">Gudang Selatan</button>
-            <button @click="quickFilterTag('Indie')" class="nb-badge bg-white hover:bg-accent">Indie Night</button>
-            <button @click="quickFilterTag('Laswi Heritage')" class="nb-badge bg-white hover:bg-accent">Laswi Heritage</button>
-            <button @click="quickFilterTag('Jazz')" class="nb-badge bg-white hover:bg-accent">Jazz</button>
-          </div>
         </div>
       </div>
 
@@ -103,18 +96,29 @@
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <div v-for="event in events.slice(0, 3)" :key="event.id" class="nb-card bg-white flex flex-col justify-between nb-card-hover">
+              <div v-for="event in events.slice(0, 3)" :key="event.id" class="nb-card !bg-white flex flex-col justify-between nb-card-hover">
                 <div>
                   <div class="relative">
                     <img :src="event.image" :alt="event.title" class="w-full h-48 object-cover border-b-2 border-ink">
-                    <span class="absolute top-2 left-2 bg-accent text-ink font-black text-xs px-2 py-1 nb-border">
-                      {{ event.category }}
-                    </span>
-                    <button @click="toggleFavorite(event.id)" class="absolute top-2 right-2 p-1.5 bg-white nb-border hover:bg-accent">
-                      <svg class="w-4 h-4" :fill="favorites.includes(event.id) ? '#111111' : 'none'" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.684a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
-                      </svg>
-                    </button>
+                    <button
+  @click="toggleFavorite(event)"
+  :data-favorite-id="event.id"
+  class="absolute top-2 right-2 p-1.5 bg-white nb-border hover:bg-accent"
+>
+  <svg
+    class="w-4 h-4"
+    :fill="favorites.includes(event.id) ? '#111111' : 'none'"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2.5"
+      d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.684a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+    />
+  </svg>
+</button>
                   </div>
                   <div class="p-4 space-y-2">
                     <div class="text-xs font-bold text-muted uppercase">📅 {{ event.date }} • {{ event.time }}</div>
@@ -662,7 +666,7 @@
           role: 'user'
         },
 
-        favorites: [],
+favorites: JSON.parse(localStorage.getItem('wishlist') || '[]').map(item => item.id),
 
         loading: false,
         error: '',
@@ -797,6 +801,60 @@
     },
 
     methods: {
+      animateFavoriteToNavbar(event) {
+  const button = document.querySelector(
+    `button[data-favorite-id="${event.id}"]`
+  )
+
+  const wishlistButton = document.querySelector(
+    '[data-wishlist-button]'
+  )
+
+  if (!button || !wishlistButton) return
+
+  const start = button.getBoundingClientRect()
+  const end = wishlistButton.getBoundingClientRect()
+
+  const heart = document.createElement('div')
+
+  heart.innerHTML = '♥'
+
+  heart.style.position = 'fixed'
+  heart.style.left = `${start.left + start.width / 2}px`
+  heart.style.top = `${start.top + start.height / 2}px`
+  heart.style.fontSize = '20px'
+  heart.style.fontWeight = '900'
+  heart.style.color = '#111111'
+  heart.style.zIndex = '9999'
+  heart.style.pointerEvents = 'none'
+  heart.style.transition = `
+    left 0.6s cubic-bezier(.2,.8,.2,1),
+    top 0.6s cubic-bezier(.2,.8,.2,1),
+    transform 0.6s cubic-bezier(.2,.8,.2,1),
+    opacity 0.6s ease
+  `
+  heart.style.transform = 'translate(-50%, -50%) scale(1.4)'
+
+  document.body.appendChild(heart)
+
+  requestAnimationFrame(() => {
+    heart.style.left = `${end.left + end.width / 2}px`
+    heart.style.top = `${end.top + end.height / 2}px`
+    heart.style.transform = 'translate(-50%, -50%) scale(0.5)'
+    heart.style.opacity = '0'
+  })
+
+  setTimeout(() => {
+    heart.remove()
+
+    // Efek loncat kecil pada tombol wishlist
+    wishlistButton.classList.add('wishlist-bounce')
+
+    setTimeout(() => {
+      wishlistButton.classList.remove('wishlist-bounce')
+    }, 400)
+  }, 650)
+},
       // ==========================================
       // LOAD USER
       // ==========================================
@@ -1311,16 +1369,40 @@ async getEvents() {
       // FAVORIT
       // ==========================================
 
-      toggleFavorite(eventId) {
-        const idx =
-          this.favorites.indexOf(eventId)
+      toggleFavorite(event) {
+  let wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]')
 
-        if (idx > -1) {
-          this.favorites.splice(idx, 1)
-        } else {
-          this.favorites.push(eventId)
-        }
-      },
+  const index = wishlist.findIndex(item => item.id === event.id)
+
+  // =========================
+  // HAPUS DARI WISHLIST
+  // =========================
+  if (index !== -1) {
+    wishlist.splice(index, 1)
+
+    this.favorites = wishlist.map(item => item.id)
+
+    localStorage.setItem('wishlist', JSON.stringify(wishlist))
+
+    window.dispatchEvent(new Event('wishlist-updated'))
+
+    return
+  }
+
+  // =========================
+  // TAMBAH KE WISHLIST
+  // =========================
+
+  wishlist.push(event)
+
+  this.favorites = wishlist.map(item => item.id)
+
+  localStorage.setItem('wishlist', JSON.stringify(wishlist))
+
+  window.dispatchEvent(new Event('wishlist-updated'))
+
+  this.animateFavoriteToNavbar(event)
+},
 
 
       // ==========================================
@@ -1461,4 +1543,26 @@ async getEvents() {
     text-transform: uppercase;
     letter-spacing: 0.05em;
   }
+
+  .wishlist-bounce {
+  animation: wishlistBounce 0.4s ease;
+}
+
+@keyframes wishlistBounce {
+  0% {
+    transform: scale(1);
+  }
+
+  40% {
+    transform: scale(1.25) rotate(-8deg);
+  }
+
+  70% {
+    transform: scale(0.9) rotate(5deg);
+  }
+
+  100% {
+    transform: scale(1) rotate(0);
+  }
+}
   </style>

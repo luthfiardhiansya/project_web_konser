@@ -92,15 +92,9 @@ onBeforeUnmount(() => {
         @click="onNavClick('view-home')"
         class="flex items-center space-x-2 group text-left"
       >
-        <div class="bg-ink text-paper font-black px-2 py-1 text-xl tracking-tighter nb-border group-hover:bg-accent group-hover:text-ink transition-colors">
-          INFO
-        </div>
-        <div class="font-black text-xl tracking-tighter leading-tight">
-          MUSIK<br>
-          <span class="text-xs bg-accent px-1 border border-ink tracking-widest uppercase">
-            BDG
-          </span>
-        </div>
+          <span class="font-heading font-black text-xl sm:text-2xl tracking-tight text-brandBlack">
+                    INFO<span class="bg-brandYellow px-1 border border-brandBlack shadow-[2px_2px_0px_#121212]">MUSIK</span>BDG
+                </span>
       </button>
 
       <!-- DESKTOP NAV LINKS -->
@@ -161,20 +155,31 @@ onBeforeUnmount(() => {
 
         <!-- FAVORITES -->
         <button
-          @click="onNavClick('view-favorites')"
-          class="p-2 nb-btn nb-btn-secondary relative"
-          title="Favorit"
-        >
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.684a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-          </svg>
-          <span
-            v-if="favoritesCount > 0"
-            class="absolute -top-1 -right-1 bg-accent text-ink text-[10px] font-black w-4 h-4 flex items-center justify-center nb-border"
-          >
-            {{ favoritesCount }}
-          </span>
-        </button>
+  @click="$router.push('/wishlist')"
+  class="p-2 nb-btn nb-btn-secondary flex items-center gap-1.5"
+  title="Favorit"
+>
+  <svg
+    class="w-4 h-4"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2.5"
+      d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.684a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+    />
+  </svg>
+
+  <span
+    v-if="favoritesCount > 0"
+    class="text-[11px] font-black leading-none"
+  >
+    {{ favoritesCount }}
+  </span>
+</button>
 
         <!-- USER AUTH -->
         <div class="flex items-center space-x-2">
@@ -237,22 +242,12 @@ onBeforeUnmount(() => {
                 <!-- MY PROFILE -->
                 <button
                   type="button"
-                  @click="onNavClick('view-profile')"
+                  @click="$router.push('/profile')"
                   class="w-full px-4 py-3 text-left text-xs font-black uppercase hover:bg-accent border-b border-ink flex items-center gap-3 transition-colors"
                 >
                   <i class="fa-solid fa-user w-4"></i>
                   <span>My Profile</span>
-                </button>
-
-                <!-- MY TICKET -->
-                <button
-                  type="button"
-                  @click="onNavClick('view-my-tickets')"
-                  class="w-full px-4 py-3 text-left text-xs font-black uppercase hover:bg-accent border-b border-ink flex items-center gap-3 transition-colors"
-                >
-                  <i class="fa-solid fa-ticket w-4"></i>
-                  <span>My Ticket</span>
-                </button>
+              </button>
 
                 <!-- PESANAN SAYA -->
                 <button

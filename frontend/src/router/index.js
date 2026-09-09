@@ -14,6 +14,8 @@ import TiketView from '../views/admin/TiketView.vue'
 import PesananView from '../views/admin/PesananView.vue'
 import PenggunaView from '../views/admin/PenggunaView.vue'
 import PembayaranView from '../views/admin/PembayaranView.vue'
+import ProfileView from '../views/ProfileView.vue'
+import WishlistView from '../views/WishlistView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -80,6 +82,18 @@ const router = createRouter({
       name: 'admin-pembayaran',
       component: PembayaranView,
       meta: { requiresAuth: true, requiresAdmin: true }
+    },
+    {
+      path: '/profile',
+      name: 'profile',
+      component: ProfileView,
+      meta: { requiresAuth: true}
+    },
+    {
+      path: '/wishlist',
+      name: 'wishlist',
+      component: WishlistView,
+      meta: {requiresAuth: true}
     }
   ]
 })
