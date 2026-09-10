@@ -1,35 +1,24 @@
 <template>
-
   <div class="register-page">
 
     <!-- HOME -->
     <button
+      type="button"
       class="home-button"
       @click="$router.push('/')"
     >
-      ← HOME
+      ← Home
     </button>
-
 
     <div class="register-card">
 
       <!-- HEADER -->
       <div class="register-header">
-
-        <div class="badge">
-          INFOMUSIKBDG
-        </div>
-
-        <h1>
-          JOIN
-          <span>US.</span>
-        </h1>
+        <h1>Daftar</h1>
 
         <p>
-          Buat akun baru untuk menikmati
-          semua fitur InfoMusikBDG.
+          Buat akun untuk menggunakan InfoMusikBDG.
         </p>
-
       </div>
 
 
@@ -39,12 +28,9 @@
         class="register-form"
       >
 
-        <!-- NAME -->
+        <!-- NAMA -->
         <div class="form-group">
-
-          <label>
-            NAMA
-          </label>
+          <label>Nama</label>
 
           <input
             v-model="name"
@@ -52,16 +38,12 @@
             placeholder="Nama kamu"
             autocomplete="name"
           />
-
         </div>
 
 
         <!-- EMAIL -->
         <div class="form-group">
-
-          <label>
-            EMAIL
-          </label>
+          <label>Email</label>
 
           <input
             v-model="email"
@@ -69,26 +51,18 @@
             placeholder="nama@email.com"
             autocomplete="email"
           />
-
         </div>
 
 
         <!-- PASSWORD -->
         <div class="form-group">
-
-          <label>
-            PASSWORD
-          </label>
+          <label>Password</label>
 
           <div class="password-wrapper">
 
             <input
               v-model="password"
-              :type="
-                showPassword
-                  ? 'text'
-                  : 'password'
-              "
+              :type="showPassword ? 'text' : 'password'"
               placeholder="Minimal 6 karakter"
               autocomplete="new-password"
             />
@@ -96,29 +70,18 @@
             <button
               type="button"
               class="password-button"
-              @click="
-                showPassword =
-                  !showPassword
-              "
+              @click="showPassword = !showPassword"
             >
-              {{
-                showPassword
-                  ? 'HIDE'
-                  : 'SHOW'
-              }}
+              {{ showPassword ? 'Sembunyikan' : 'Lihat' }}
             </button>
 
           </div>
-
         </div>
 
 
-        <!-- CONFIRM -->
+        <!-- KONFIRMASI PASSWORD -->
         <div class="form-group">
-
-          <label>
-            KONFIRMASI PASSWORD
-          </label>
+          <label>Konfirmasi Password</label>
 
           <div class="password-wrapper">
 
@@ -143,29 +106,26 @@
             >
               {{
                 showConfirmPassword
-                  ? 'HIDE'
-                  : 'SHOW'
+                  ? 'Sembunyikan'
+                  : 'Lihat'
               }}
             </button>
 
           </div>
-
         </div>
 
 
-        <!-- REGISTER BUTTON -->
+        <!-- REGISTER -->
         <button
           type="submit"
           class="register-button"
           :disabled="loading"
         >
-
           {{
             loading
-              ? 'CREATING...'
-              : 'CREATE ACCOUNT →'
+              ? 'Membuat akun...'
+              : 'Daftar'
           }}
-
         </button>
 
       </form>
@@ -179,9 +139,10 @@
         </span>
 
         <button
+          type="button"
           @click="$router.push('/login')"
         >
-          LOGIN
+          Login
         </button>
 
       </div>
@@ -189,7 +150,6 @@
     </div>
 
   </div>
-
 </template>
 
 
@@ -197,41 +157,31 @@
 
 import api from '../utils/api'
 
-
 export default {
 
   name: 'RegisterView',
 
-
   data() {
-
     return {
 
       name: '',
-
       email: '',
-
       password: '',
-
       password_confirmation: '',
 
       showPassword: false,
-
       showConfirmPassword: false,
 
       loading: false
 
     }
-
   },
 
 
   methods: {
 
     /*
-    |--------------------------------------------------------------------------
     | FLASH
-    |--------------------------------------------------------------------------
     */
 
     showFlash(
@@ -241,37 +191,29 @@ export default {
     ) {
 
       window.dispatchEvent(
-
         new CustomEvent(
           'show-flash',
           {
             detail: {
-
               title,
-
               message,
-
               type
-
             }
           }
         )
-
       )
 
     },
 
 
     /*
-    |--------------------------------------------------------------------------
     | REGISTER
-    |--------------------------------------------------------------------------
     */
 
     async register() {
 
       /*
-      | CEK KOSONG
+      | CEK DATA KOSONG
       */
 
       if (
@@ -282,17 +224,12 @@ export default {
       ) {
 
         this.showFlash(
-
-          'DATA BELUM LENGKAP!',
-
+          'Data belum lengkap',
           'Semua kolom wajib diisi.',
-
           'warning'
-
         )
 
         return
-
       }
 
 
@@ -306,17 +243,12 @@ export default {
       ) {
 
         this.showFlash(
-
-          'PASSWORD TIDAK SAMA!',
-
+          'Password tidak sama',
           'Pastikan password dan konfirmasi password sama.',
-
           'error'
-
         )
 
         return
-
       }
 
 
@@ -329,17 +261,12 @@ export default {
       ) {
 
         this.showFlash(
-
-          'PASSWORD TERLALU PENDEK!',
-
+          'Password terlalu pendek',
           'Password harus minimal 6 karakter.',
-
           'warning'
-
         )
 
         return
-
       }
 
 
@@ -356,19 +283,11 @@ export default {
           await api.post(
             '/register',
             {
-
-              name:
-                this.name,
-
-              email:
-                this.email,
-
-              password:
-                this.password,
-
+              name: this.name,
+              email: this.email,
+              password: this.password,
               password_confirmation:
                 this.password_confirmation
-
             }
           )
 
@@ -382,8 +301,7 @@ export default {
 
 
         /*
-        | BACKEND KAMU LANGSUNG
-        | MEMBERIKAN TOKEN
+        | SIMPAN TOKEN
         */
 
         if (data?.token) {
@@ -413,17 +331,13 @@ export default {
 
 
         /*
-        | FLASH SUCCESS
+        | BERHASIL
         */
 
         this.showFlash(
-
-          'REGISTER BERHASIL!',
-
-          'Akun berhasil dibuat. Selamat datang di InfoMusikBDG!',
-
+          'Pendaftaran berhasil',
+          'Akun kamu berhasil dibuat.',
           'success'
-
         )
 
 
@@ -441,9 +355,7 @@ export default {
       } catch (error) {
 
         /*
-        |--------------------------------------------------------------------------
         | VALIDATION ERROR
-        |--------------------------------------------------------------------------
         */
 
         if (
@@ -454,55 +366,30 @@ export default {
             error.response.data.errors
 
 
-          /*
-          | EMAIL SUDAH TERDAFTAR
-          */
-
-          if (
-            errors?.email
-          ) {
+          if (errors?.email) {
 
             this.showFlash(
-
-              'EMAIL SUDAH TERDAFTAR!',
-
+              'Email sudah terdaftar',
               errors.email[0],
-
               'error'
-
             )
 
           } else {
 
             this.showFlash(
-
-              'DATA TIDAK VALID!',
-
+              'Data tidak valid',
               'Periksa kembali data pendaftaran kamu.',
-
-              'error'
-
+              'warning'
             )
 
           }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | SERVER ERROR
-        |--------------------------------------------------------------------------
-        */
-
         } else {
 
           this.showFlash(
-
-            'REGISTER GAGAL!',
-
+            'Pendaftaran gagal',
             'Tidak dapat terhubung ke server.',
-
             'error'
-
           )
 
         }
@@ -525,329 +412,252 @@ export default {
 <style scoped>
 
 .register-page {
-
   min-height: 100vh;
 
   display: flex;
-
   align-items: center;
-
   justify-content: center;
 
-  padding: 30px;
+  padding: 20px;
 
-  background: #FAF7F0;
-
+  background: #f5f5f5;
 }
 
 
+/* CARD */
+
 .register-card {
-
   width: 100%;
+  max-width: 420px;
 
-  max-width: 500px;
-
-  padding: 40px;
+  padding: 32px;
 
   background: white;
 
-  border: 4px solid #121212;
+  border: 1px solid #ddd;
+  border-radius: 8px;
 
   box-shadow:
-    10px 10px 0 #121212;
-
+    0 4px 15px rgba(0, 0, 0, 0.08);
 }
 
+
+/* HOME */
 
 .home-button {
-
   position: fixed;
 
-  top: 25px;
-  left: 25px;
+  top: 20px;
+  left: 20px;
 
-  padding: 10px 16px;
+  padding: 8px 12px;
 
-  background: #FFDE59;
+  background: white;
 
-  border: 3px solid #121212;
+  border: 1px solid #ccc;
+  border-radius: 6px;
 
-  box-shadow:
-    4px 4px 0 #121212;
-
-  font-weight: 900;
+  font-size: 14px;
 
   cursor: pointer;
+}
 
+.home-button:hover {
+  background: #f0f0f0;
 }
 
 
-.home-button:active {
+/* HEADER */
 
-  transform:
-    translate(4px, 4px);
+.register-header {
+  text-align: center;
 
-  box-shadow:
-    0 0 0 #121212;
-
-}
-
-
-.badge {
-
-  display: inline-block;
-
-  padding: 6px 10px;
-
-  background: #A855F7;
-
-  border: 3px solid #121212;
-
-  font-size: 11px;
-
-  font-weight: 900;
-
+  margin-bottom: 28px;
 }
 
 
 .register-header h1 {
+  margin: 0 0 8px;
 
-  margin: 18px 0 5px;
+  font-size: 30px;
+  font-weight: 700;
 
-  font-family:
-    'Space Grotesk',
-    sans-serif;
-
-  font-size: 48px;
-
-  line-height: .9;
-
-  font-weight: 900;
-
-}
-
-
-.register-header h1 span {
-
-  color: #7E22CE;
-
+  color: #111;
 }
 
 
 .register-header p {
+  margin: 0;
 
-  margin-bottom: 28px;
-
-  font-size: 13px;
-
-  font-weight: 600;
+  font-size: 14px;
 
   line-height: 1.5;
 
+  color: #666;
 }
 
 
+/* FORM */
+
 .form-group {
-
   margin-bottom: 17px;
-
 }
 
 
 .form-group label {
-
   display: block;
 
   margin-bottom: 7px;
 
-  font-size: 11px;
+  font-size: 14px;
+  font-weight: 600;
 
-  font-weight: 900;
-
+  color: #333;
 }
 
 
 .form-group input {
-
   width: 100%;
 
-  padding: 13px;
+  box-sizing: border-box;
 
-  background: #FAF7F0;
+  padding: 12px;
 
-  border: 3px solid #121212;
+  background: white;
+
+  border: 1px solid #ccc;
+  border-radius: 6px;
 
   outline: none;
 
   font-size: 14px;
-
 }
 
 
 .form-group input:focus {
-
-  box-shadow:
-    5px 5px 0 #7E22CE;
-
+  border-color: #333;
 }
 
 
+/* PASSWORD */
+
 .password-wrapper {
-
   position: relative;
-
 }
 
 
 .password-wrapper input {
-
-  padding-right: 75px;
-
+  padding-right: 90px;
 }
 
 
 .password-button {
-
   position: absolute;
 
   right: 8px;
-
   top: 50%;
 
-  transform:
-    translateY(-50%);
+  transform: translateY(-50%);
 
-  padding: 5px 7px;
+  padding: 5px;
 
-  background: #FFDE59;
+  background: transparent;
 
-  border: 2px solid #121212;
+  border: none;
 
-  font-size: 9px;
+  color: #555;
 
-  font-weight: 900;
+  font-size: 12px;
 
   cursor: pointer;
-
 }
 
 
-.register-button {
+/* REGISTER BUTTON */
 
+.register-button {
   width: 100%;
 
-  margin-top: 8px;
+  margin-top: 5px;
 
-  padding: 15px;
+  padding: 12px;
 
-  background: #7E22CE;
+  background: #111;
 
   color: white;
 
-  border: 3px solid #121212;
+  border: none;
+  border-radius: 6px;
 
-  box-shadow:
-    6px 6px 0 #121212;
-
-  font-weight: 900;
+  font-size: 14px;
+  font-weight: 600;
 
   cursor: pointer;
-
 }
 
 
 .register-button:hover {
-
-  background: #A855F7;
-
-}
-
-
-.register-button:active {
-
-  transform:
-    translate(6px, 6px);
-
-  box-shadow:
-    0 0 0 #121212;
-
+  background: #333;
 }
 
 
 .register-button:disabled {
-
-  opacity: .6;
+  opacity: 0.6;
 
   cursor: not-allowed;
-
 }
 
 
-.login-link {
+/* LOGIN */
 
+.login-link {
   display: flex;
 
   justify-content: center;
 
-  gap: 7px;
+  gap: 6px;
 
-  margin-top: 25px;
+  margin-top: 22px;
 
-  font-size: 12px;
+  font-size: 13px;
 
-  font-weight: 600;
-
+  color: #666;
 }
 
 
 .login-link button {
-
   padding: 0;
 
   background: transparent;
 
   border: none;
 
-  color: #7E22CE;
+  color: #111;
 
-  font-weight: 900;
+  font-weight: 600;
 
   cursor: pointer;
-
 }
 
 
+.login-link button:hover {
+  text-decoration: underline;
+}
+
+
+/* MOBILE */
+
 @media (max-width: 600px) {
 
-  .register-page {
-
-    padding: 20px;
-
-  }
-
-
   .register-card {
-
-    padding: 25px;
-
+    padding: 24px;
   }
-
-
-  .register-header h1 {
-
-    font-size: 38px;
-
-  }
-
 
   .home-button {
-
     position: absolute;
 
     top: 15px;
-
     left: 15px;
-
   }
 
 }

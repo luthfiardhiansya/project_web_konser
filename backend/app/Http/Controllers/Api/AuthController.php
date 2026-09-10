@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Laravel\Socialite\Facades\Socialite;
 
 class AuthController extends Controller
 {
@@ -63,6 +64,61 @@ class AuthController extends Controller
             ]
         ]);
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | GOOGLE LOGIN
+    |--------------------------------------------------------------------------
+    */
+
+    public function redirectToGoogle()
+    {
+    return Socialite::driver('google')
+        ->stateless()
+        ->redirect();
+    }
+
+    public function handleGoogleCallback()
+{
+    try {
+        $googleUser = Socialite::driver('google')
+            ->stateless()
+            ->user();
+
+        $user = User::where('email', $googleUser->getEmail())->first();
+
+        if (!$user) {
+            $user = User::create([
+                'name' => $googleUser->getName() ?? 'User Google',
+                'email' => $googleUser->getEmail(),
+                'password' => Hash::make(uniqid()),
+                'role' => 'user',
+            ]);
+        }
+
+        $token = $user->createToken('auth_token')->plainTextToken;
+
+        $userData = urlencode(json_encode([
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'role' => $user->role,
+        ]));
+
+        return redirect(
+            'http://localhost:5173/auth/google/callback?token=' .
+            urlencode($token) .
+            '&user=' . $userData
+        );
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => false,
+            'message' => 'Login Google gagal',
+            'error' => $e->getMessage(),
+        ], 500);
+    }
+}
 
     public function profile(Request $request)
     {

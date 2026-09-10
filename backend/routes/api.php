@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\MidtransController;
+use App\Http\Controllers\Api\IssuedTicketController;
 
 /*
 |--------------------------------------------------------------------------
@@ -20,9 +21,14 @@ use App\Http\Controllers\Api\MidtransController;
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
+Route::get('/auth/google', [AuthController::class, 'redirectToGoogle']);
+Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallback']);
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/profile', [AuthController::class, 'profile']);
     Route::post('/logout', [AuthController::class, 'logout']);
+
+    Route::get('/my-tickets', [IssuedTicketController::class, 'myTickets']);
 });
 
 /*

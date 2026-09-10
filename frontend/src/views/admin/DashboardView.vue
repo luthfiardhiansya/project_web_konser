@@ -42,6 +42,7 @@ const formatDate = (d) => {
 // ─── Fetch ────────────────────────────────────────────────────────────────────
 const fetchAll = async () => {
   loading.value = true
+
   try {
     const [evRes, tkRes, orRes, pyRes, usRes, catRes] = await Promise.all([
       api.get('/events'),
@@ -56,8 +57,8 @@ const fetchAll = async () => {
     const tickets  = tkRes.data.data   || tkRes.data   || []
     orders.value   = orRes.data.data   || orRes.data   || []
     payments.value = pyRes.data.data   || pyRes.data   || []
-    const users    = usRes.data.data   || usRes.data   || []
-    const cats     = catRes.data.data  || catRes.data  || []
+    const users    = usRes.data.data    || usRes.data    || []
+    const cats     = catRes.data.data   || catRes.data   || []
 
     const paid = payments.value.filter(p => p.status === 'berhasil')
 
@@ -68,7 +69,10 @@ const fetchAll = async () => {
       totalPengguna   : users.length,
       totalPembayaran : payments.value.length,
       totalKategori   : cats.length,
-      pendapatanTotal : paid.reduce((s, p) => s + Number(p.jumlah_bayar || 0), 0),
+      pendapatanTotal : paid.reduce(
+        (s, p) => s + Number(p.jumlah_bayar || 0),
+        0
+      ),
       pesananBerhasil : paid.length,
     }
 
@@ -76,8 +80,16 @@ const fetchAll = async () => {
       .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
       .slice(0, 6)
 
+    // PENTING:
+    // loading harus false supaya <canvas> muncul
+    loading.value = false
+
+    // Tunggu Vue selesai merender canvas
     await nextTick()
+
+    // Setelah canvas tersedia, gambar chart
     drawCharts()
+
   } catch (e) {
     console.error('Gagal fetch dashboard:', e)
   } finally {

@@ -249,6 +249,15 @@ onBeforeUnmount(() => {
                   <span>My Profile</span>
               </button>
 
+                <button
+                  type="button"
+                    @click="$router.push('/my-tickets')"
+                  class="w-full px-4 py-3 text-left text-xs font-black uppercase hover:bg-accent border-b border-ink flex items-center gap-3 transition-colors"
+                >
+                  <i class="fa-solid fa-ticket w-4"></i>
+                  <span>My Ticket</span>
+              </button>
+
                 <!-- PESANAN SAYA -->
                 <button
                   type="button"
@@ -311,9 +320,13 @@ onBeforeUnmount(() => {
         <button @click="onNavClick('view-events')" class="p-2 text-left hover:bg-accent border border-ink">
           Semua Event
         </button>
-        <button @click="onNavClick('view-my-tickets')" class="p-2 text-left hover:bg-accent border border-ink">
-          Tiket Saya
-        </button>
+        <button
+  @click="$router.push('/my-tickets'); isMobileMenuOpen = false"
+  class="p-2 text-left hover:bg-accent border border-ink flex items-center gap-3"
+>
+  <i class="fa-solid fa-ticket w-4"></i>
+  My Ticket
+</button>
         <button @click="onNavClick('view-favorites')" class="p-2 text-left hover:bg-accent border border-ink">
           Event Favorit ({{ favoritesCount }})
         </button>
@@ -337,9 +350,12 @@ onBeforeUnmount(() => {
           <button @click="onNavClick('view-profile')" class="p-2 text-left hover:bg-accent border border-ink flex items-center gap-3">
             <i class="fa-solid fa-user w-4"></i> My Profile
           </button>
-          <button @click="onNavClick('view-my-tickets')" class="p-2 text-left hover:bg-accent border border-ink flex items-center gap-3">
-            <i class="fa-solid fa-ticket w-4"></i> My Ticket
-          </button>
+          <button
+  @click="$router.push('/my-tickets'); isMobileMenuOpen = false"
+  class="p-2 text-left hover:bg-accent border border-ink"
+>
+  Tiket Saya
+</button>
           <button @click="onNavClick('view-pesanan')" class="p-2 text-left hover:bg-accent border border-ink flex items-center gap-3">
             <i class="fa-solid fa-cart-shopping w-4"></i> Pesanan Saya
           </button>

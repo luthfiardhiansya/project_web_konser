@@ -1,38 +1,20 @@
 <template>
-
   <div class="login-page">
 
-    <!-- HOME -->
     <button
       class="home-button"
       @click="$router.push('/')"
     >
-      ← HOME
+      ← Home
     </button>
-
 
     <div class="login-card">
 
-      <!-- HEADER -->
       <div class="login-header">
-
-        <div class="badge">
-          INFOMUSIKBDG
-        </div>
-
-        <h1>
-          WELCOME
-          <span>BACK.</span>
-        </h1>
-
-        <p>
-          Login untuk melanjutkan ke akunmu.
-        </p>
-
+        <h1>Login</h1>
+        <p>Masuk ke akun InfoMusikBDG kamu.</p>
       </div>
 
-
-      <!-- FORM -->
       <form
         @submit.prevent="login"
         class="login-form"
@@ -40,10 +22,7 @@
 
         <!-- EMAIL -->
         <div class="form-group">
-
-          <label>
-            EMAIL
-          </label>
+          <label>Email</label>
 
           <input
             v-model="email"
@@ -51,16 +30,11 @@
             placeholder="nama@email.com"
             autocomplete="email"
           />
-
         </div>
-
 
         <!-- PASSWORD -->
         <div class="form-group">
-
-          <label>
-            PASSWORD
-          </label>
+          <label>Password</label>
 
           <div class="password-wrapper">
 
@@ -76,13 +50,11 @@
               class="password-button"
               @click="showPassword = !showPassword"
             >
-              {{ showPassword ? 'HIDE' : 'SHOW' }}
+              {{ showPassword ? 'Sembunyikan' : 'Lihat' }}
             </button>
 
           </div>
-
         </div>
-
 
         <!-- LOGIN -->
         <button
@@ -90,33 +62,40 @@
           class="login-button"
           :disabled="loading"
         >
-
-          {{ loading ? 'LOGIN...' : 'LOGIN →' }}
-
+          {{ loading ? 'Memproses...' : 'Login' }}
         </button>
 
       </form>
 
+      <!-- PEMISAH -->
+      <div class="divider">
+        <span>atau</span>
+      </div>
+
+      <!-- GOOGLE -->
+      <button
+        type="button"
+        class="google-button"
+        @click="loginWithGoogle"
+      >
+        <span class="google-icon">G</span>
+        Login dengan Google
+      </button>
 
       <!-- REGISTER -->
       <div class="register-link">
-
-        <span>
-          Belum punya akun?
-        </span>
+        <span>Belum punya akun?</span>
 
         <button
+          type="button"
           @click="$router.push('/register')"
         >
-          REGISTER
+          Daftar
         </button>
-
       </div>
 
     </div>
-
   </div>
-
 </template>
 
 
@@ -124,235 +103,124 @@
 
 import api from '../utils/api'
 
-
 export default {
 
   name: 'LoginView',
 
-
   data() {
-
     return {
-
       email: '',
-
       password: '',
-
       showPassword: false,
-
       loading: false
-
     }
-
   },
-
 
   methods: {
 
-    /*
-    |--------------------------------------------------------------------------
-    | FLASH
-    |--------------------------------------------------------------------------
-    */
-
-    showFlash(
-      title,
-      message,
-      type = 'success'
-    ) {
+    showFlash(title, message, type = 'success') {
 
       window.dispatchEvent(
-
-        new CustomEvent(
-          'show-flash',
-          {
-            detail: {
-
-              title,
-
-              message,
-
-              type
-
-            }
+        new CustomEvent('show-flash', {
+          detail: {
+            title,
+            message,
+            type
           }
-        )
-
+        })
       )
 
     },
 
 
     /*
-    |--------------------------------------------------------------------------
-    | LOGIN
-    |--------------------------------------------------------------------------
+    | LOGIN GOOGLE
+    */
+
+    loginWithGoogle() {
+
+      window.location.href =
+        'http://localhost:8000/api/auth/google'
+
+    },
+
+
+    /*
+    | LOGIN EMAIL
     */
 
     async login() {
 
-      /*
-      | VALIDASI
-      */
-
-      if (
-        !this.email ||
-        !this.password
-      ) {
+      if (!this.email || !this.password) {
 
         this.showFlash(
-
-          'DATA BELUM LENGKAP!',
-
+          'Data belum lengkap',
           'Email dan password wajib diisi.',
-
           'warning'
-
         )
 
         return
 
       }
 
-
       this.loading = true
-
 
       try {
 
-        /*
-        | REQUEST LOGIN
-        */
+        const response = await api.post(
+          '/login',
+          {
+            email: this.email,
+            password: this.password
+          }
+        )
 
-        const response =
-          await api.post(
-            '/login',
-            {
-
-              email: this.email,
-
-              password: this.password
-
-            }
-          )
-
-
-        /*
-        | AMBIL DATA
-        */
-
-        const data =
-          response.data.data
-
-
-        /*
-        | SIMPAN TOKEN
-        */
+        const data = response.data.data
 
         localStorage.setItem(
           'token',
           data.token
         )
 
-
-        /*
-        | SIMPAN USER
-        */
-
         localStorage.setItem(
           'user',
-          JSON.stringify(
-            data.user
-          )
+          JSON.stringify(data.user)
         )
-
-
-        /*
-        | FLASH SUCCESS
-        */
 
         this.showFlash(
-
-          'LOGIN BERHASIL!',
-
+          'Login berhasil',
           `Selamat datang kembali, ${data.user.name}.`,
-
           'success'
-
         )
 
-
-        /*
-        | PINDAH HOME
-        */
-
         setTimeout(() => {
-
           this.$router.push('/')
-
         }, 500)
-
 
       } catch (error) {
 
-        /*
-        |--------------------------------------------------------------------------
-        | EMAIL / PASSWORD SALAH
-        |--------------------------------------------------------------------------
-        */
-
-        if (
-          error.response?.status === 401
-        ) {
+        if (error.response?.status === 401) {
 
           this.showFlash(
-
-            'LOGIN GAGAL!',
-
+            'Login gagal',
             'Email atau password salah.',
-
             'error'
-
           )
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | VALIDATION ERROR
-        |--------------------------------------------------------------------------
-        */
-
-        } else if (
-          error.response?.status === 422
-        ) {
+        } else if (error.response?.status === 422) {
 
           this.showFlash(
-
-            'DATA TIDAK VALID!',
-
-            'Periksa kembali email dan password kamu.',
-
+            'Data tidak valid',
+            'Periksa kembali email dan password.',
             'warning'
-
           )
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | SERVER ERROR
-        |--------------------------------------------------------------------------
-        */
 
         } else {
 
           this.showFlash(
-
-            'SERVER ERROR!',
-
+            'Server error',
             'Tidak dapat terhubung ke server.',
-
             'error'
-
           )
 
         }
@@ -375,327 +243,294 @@ export default {
 <style scoped>
 
 .login-page {
-
   min-height: 100vh;
 
   display: flex;
-
   align-items: center;
-
   justify-content: center;
 
-  padding: 30px;
+  padding: 20px;
 
-  background: #FAF7F0;
-
+  background: #f5f5f5;
 }
 
 
 .login-card {
-
   width: 100%;
+  max-width: 400px;
 
-  max-width: 480px;
-
-  padding: 40px;
+  padding: 32px;
 
   background: white;
 
-  border: 4px solid #121212;
+  border: 1px solid #ddd;
+  border-radius: 8px;
 
-  box-shadow:
-    10px 10px 0 #121212;
-
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
 }
 
 
 .home-button {
-
   position: fixed;
 
-  top: 25px;
-  left: 25px;
+  top: 20px;
+  left: 20px;
 
-  padding: 10px 16px;
+  padding: 8px 12px;
 
-  background: #FFDE59;
+  background: white;
 
-  border: 3px solid #121212;
+  border: 1px solid #ccc;
+  border-radius: 6px;
 
-  box-shadow:
-    4px 4px 0 #121212;
-
-  font-weight: 900;
+  font-size: 14px;
 
   cursor: pointer;
-
 }
 
 
-.home-button:active {
-
-  transform:
-    translate(4px, 4px);
-
-  box-shadow:
-    0 0 0 #121212;
-
+.home-button:hover {
+  background: #f0f0f0;
 }
 
 
-.badge {
+.login-header {
+  text-align: center;
 
-  display: inline-block;
-
-  padding: 6px 10px;
-
-  background: #A855F7;
-
-  border: 3px solid #121212;
-
-  font-size: 11px;
-
-  font-weight: 900;
-
+  margin-bottom: 28px;
 }
 
 
 .login-header h1 {
+  margin: 0 0 8px;
 
-  margin: 18px 0 5px;
+  font-size: 30px;
+  font-weight: 700;
 
-  font-family:
-    'Space Grotesk',
-    sans-serif;
-
-  font-size: 48px;
-
-  line-height: .9;
-
-  font-weight: 900;
-
-}
-
-
-.login-header h1 span {
-
-  color: #7E22CE;
-
+  color: #111;
 }
 
 
 .login-header p {
-
-  margin-bottom: 30px;
+  margin: 0;
 
   font-size: 14px;
 
-  font-weight: 600;
-
+  color: #666;
 }
 
 
 .form-group {
-
-  margin-bottom: 20px;
-
+  margin-bottom: 18px;
 }
 
 
 .form-group label {
-
   display: block;
 
   margin-bottom: 7px;
 
-  font-size: 11px;
+  font-size: 14px;
+  font-weight: 600;
 
-  font-weight: 900;
-
+  color: #333;
 }
 
 
 .form-group input {
-
   width: 100%;
 
-  padding: 14px;
+  box-sizing: border-box;
 
-  background: #FAF7F0;
+  padding: 12px;
 
-  border: 3px solid #121212;
+  background: white;
+
+  border: 1px solid #ccc;
+  border-radius: 6px;
 
   outline: none;
 
   font-size: 14px;
-
 }
 
 
 .form-group input:focus {
-
-  box-shadow:
-    5px 5px 0 #7E22CE;
-
+  border-color: #333;
 }
 
 
 .password-wrapper {
-
   position: relative;
-
 }
 
 
 .password-wrapper input {
-
   padding-right: 75px;
-
 }
 
 
 .password-button {
-
   position: absolute;
 
   right: 8px;
-
   top: 50%;
 
-  transform:
-    translateY(-50%);
+  transform: translateY(-50%);
 
   padding: 5px 7px;
 
-  background: #FFDE59;
+  background: transparent;
 
-  border: 2px solid #121212;
+  border: none;
 
-  font-size: 9px;
+  color: #555;
 
-  font-weight: 900;
+  font-size: 12px;
 
   cursor: pointer;
-
 }
 
 
 .login-button {
-
   width: 100%;
 
-  margin-top: 8px;
+  padding: 12px;
 
-  padding: 15px;
-
-  background: #7E22CE;
+  background: #111;
 
   color: white;
 
-  border: 3px solid #121212;
+  border: none;
+  border-radius: 6px;
 
-  box-shadow:
-    6px 6px 0 #121212;
-
-  font-weight: 900;
+  font-size: 14px;
+  font-weight: 600;
 
   cursor: pointer;
-
 }
 
 
 .login-button:hover {
-
-  background: #A855F7;
-
-}
-
-
-.login-button:active {
-
-  transform:
-    translate(6px, 6px);
-
-  box-shadow:
-    0 0 0 #121212;
-
+  background: #333;
 }
 
 
 .login-button:disabled {
-
-  opacity: .6;
+  opacity: 0.6;
 
   cursor: not-allowed;
+}
 
+
+.divider {
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+
+  margin: 22px 0;
+
+  color: #999;
+
+  font-size: 13px;
+}
+
+
+.divider::before,
+.divider::after {
+  content: '';
+
+  flex: 1;
+
+  height: 1px;
+
+  background: #ddd;
+}
+
+
+.google-button {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 10px;
+
+  padding: 11px;
+
+  background: white;
+
+  border: 1px solid #ccc;
+  border-radius: 6px;
+
+  font-size: 14px;
+  font-weight: 500;
+
+  cursor: pointer;
+}
+
+
+.google-button:hover {
+  background: #f7f7f7;
+}
+
+
+.google-icon {
+  font-size: 17px;
+  font-weight: 700;
+
+  color: #4285f4;
 }
 
 
 .register-link {
-
   display: flex;
 
   justify-content: center;
 
-  gap: 7px;
+  gap: 6px;
 
-  margin-top: 25px;
+  margin-top: 22px;
 
-  font-size: 12px;
+  font-size: 13px;
 
-  font-weight: 600;
-
+  color: #666;
 }
 
 
 .register-link button {
-
   padding: 0;
 
   background: transparent;
 
   border: none;
 
-  color: #7E22CE;
+  color: #111;
 
-  font-weight: 900;
+  font-weight: 600;
 
   cursor: pointer;
+}
 
+
+.register-link button:hover {
+  text-decoration: underline;
 }
 
 
 @media (max-width: 600px) {
 
-  .login-page {
-
-    padding: 20px;
-
-  }
-
-
   .login-card {
-
-    padding: 25px;
-
+    padding: 24px;
   }
-
-
-  .login-header h1 {
-
-    font-size: 38px;
-
-  }
-
 
   .home-button {
-
     position: absolute;
 
     top: 15px;
-
     left: 15px;
-
   }
 
 }

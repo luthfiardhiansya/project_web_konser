@@ -5,21 +5,22 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class OrderDetail extends Model
+class IssuedTicket extends Model
 {
     use HasFactory;
 
     protected $fillable = [
         'order_id',
+        'order_detail_id',
         'ticket_id',
-        'jumlah',
-        'harga_satuan',
-        'subtotal',
+        'qr_token',
+        'status',
+        'scanned_at',
+        'scanned_by',
     ];
 
     protected $casts = [
-        'harga_satuan' => 'decimal:2',
-        'subtotal' => 'decimal:2',
+        'scanned_at' => 'datetime',
     ];
 
     public function order()
@@ -27,13 +28,18 @@ class OrderDetail extends Model
         return $this->belongsTo(Order::class);
     }
 
+    public function orderDetail()
+    {
+        return $this->belongsTo(OrderDetail::class);
+    }
+
     public function ticket()
     {
         return $this->belongsTo(Ticket::class);
     }
 
-    public function issuedTickets()
+    public function scanner()
     {
-    return $this->hasMany(IssuedTicket::class);
+        return $this->belongsTo(User::class, 'scanned_by');
     }
 }

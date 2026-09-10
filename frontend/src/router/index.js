@@ -16,6 +16,8 @@ import PenggunaView from '../views/admin/PenggunaView.vue'
 import PembayaranView from '../views/admin/PembayaranView.vue'
 import ProfileView from '../views/ProfileView.vue'
 import WishlistView from '../views/WishlistView.vue'
+import MyTicketsView from '../views/MyTicketsView.vue'
+import GoogleCallbackView from '../views/GoogleCallbackView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -94,6 +96,17 @@ const router = createRouter({
       name: 'wishlist',
       component: WishlistView,
       meta: {requiresAuth: true}
+    },
+    {
+      path: '/my-tickets',
+      name: 'my-tickets',
+      component: MyTicketsView,
+        meta: { requiresAuth: true }
+    },
+    {
+      path: '/auth/google/callback',
+      name: 'google-callback',
+      component: GoogleCallbackView
     }
   ]
 })

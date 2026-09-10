@@ -5,7 +5,12 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\Payment;
+use App\Models\IssuedTicket;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\ETicketMail;
+use Illuminate\Support\Str;
 use Midtrans\Config;
 use Midtrans\Snap;
 
@@ -60,42 +65,166 @@ class MidtransController extends Controller
             'status' => 'required|string',
         ]);
 
-        $order = Order::findOrFail($request->order_id);
+        DB::beginTransaction();
 
-        $orderStatus = 'pending';
-        $paymentStatus = 'pending';
-        $statusInput = strtolower($request->status);
+        try {
+            $order = Order::with('orderDetails.ticket')
+                ->findOrFail($request->order_id);
 
-        if (in_array($statusInput, ['success', 'settlement', 'capture', 'dibayar', 'berhasil'])) {
-            $orderStatus = 'dibayar';
-            $paymentStatus = 'berhasil';
-        } elseif (in_array($statusInput, ['deny', 'cancel', 'expire', 'gagal', 'dibatalkan'])) {
-            $orderStatus = 'dibatalkan';
-            $paymentStatus = 'gagal';
-        }
+            $orderStatus = 'pending';
+            $paymentStatus = 'pending';
 
-        $order->update(['status' => $orderStatus]);
+            $statusInput = strtolower($request->status);
 
-        $payment = $order->payment;
-        if (!$payment) {
-            $payment = Payment::create([
-                'order_id' => $order->id,
-                'metode_pembayaran' => $request->metode_pembayaran ?? 'Midtrans Payment',
-                'jumlah_bayar' => $order->total_harga,
-                'status' => $paymentStatus,
-                'dibayar_pada' => $paymentStatus === 'berhasil' ? now() : null,
+            if (in_array($statusInput, [
+                'success',
+                'settlement',
+                'capture',
+                'dibayar',
+                'berhasil'
+            ])) {
+                $orderStatus = 'dibayar';
+                $paymentStatus = 'berhasil';
+
+            } elseif (in_array($statusInput, [
+                'deny',
+                'cancel',
+                'expire',
+                'gagal',
+                'dibatalkan'
+            ])) {
+                $orderStatus = 'dibatalkan';
+                $paymentStatus = 'gagal';
+            }
+
+            $order->update([
+                'status' => $orderStatus
             ]);
-        } else {
-            $payment->update([
-                'status' => $paymentStatus,
-                'dibayar_pada' => $paymentStatus === 'berhasil' ? now() : $payment->dibayar_pada,
-            ]);
-        }
 
-        return response()->json([
-            'status' => true,
-            'message' => 'Status pembayaran berhasil diperbarui',
-            'data' => $order->load(['user', 'orderDetails.ticket.event', 'payment']),
-        ]);
+            /*
+            |--------------------------------------------------------------------------
+            | UPDATE / CREATE PAYMENT
+            |--------------------------------------------------------------------------
+            */
+
+            $payment = $order->payment;
+
+            if (!$payment) {
+                $payment = Payment::create([
+                    'order_id' => $order->id,
+                    'metode_pembayaran' => $request->metode_pembayaran
+                        ?? 'Midtrans Payment',
+                    'jumlah_bayar' => $order->total_harga,
+                    'status' => $paymentStatus,
+                    'dibayar_pada' => $paymentStatus === 'berhasil'
+                        ? now()
+                        : null,
+                ]);
+            } else {
+                $payment->update([
+                    'status' => $paymentStatus,
+                    'dibayar_pada' => $paymentStatus === 'berhasil'
+                        ? ($payment->dibayar_pada ?? now())
+                        : $payment->dibayar_pada,
+                ]);
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | BUAT E-TICKET / QR
+            |--------------------------------------------------------------------------
+            */
+
+            if ($paymentStatus === 'berhasil') {
+
+                foreach ($order->orderDetails as $detail) {
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | Cegah QR dibuat dua kali
+                    |--------------------------------------------------------------------------
+                    */
+
+                    $existingCount = IssuedTicket::where(
+                        'order_detail_id',
+                        $detail->id
+                    )->count();
+
+                    $jumlahSudahDibuat = $existingCount;
+                    $jumlahTiket = (int) $detail->jumlah;
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | Buat QR sesuai jumlah tiket
+                    |--------------------------------------------------------------------------
+                    */
+
+                    for (
+                        $i = $jumlahSudahDibuat;
+                        $i < $jumlahTiket;
+                        $i++
+                    ) {
+
+                        IssuedTicket::create([
+                            'order_id' => $order->id,
+                            'order_detail_id' => $detail->id,
+                            'ticket_id' => $detail->ticket_id,
+                            'qr_token' => (string) Str::uuid(),
+                            'status' => 'valid',
+                        ]);
+                    }
+                }
+            }
+
+            DB::commit();
+
+            /*
+            |--------------------------------------------------------------------------
+            | KIRIM EMAIL E-TICKET
+            |--------------------------------------------------------------------------
+            */
+
+            if ($paymentStatus === 'berhasil') {
+
+                $order->load([
+                    'user',
+                    'orderDetails.ticket.event',
+                    'payment',
+                    'issuedTickets'
+                ]);
+
+                Mail::to($order->user->email)->send(
+                    new ETicketMail($order)
+                );
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | RESPONSE
+            |--------------------------------------------------------------------------
+            */
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Status pembayaran berhasil diperbarui.',
+                'data' => $order->load([
+                    'user',
+                    'orderDetails.ticket.event',
+                    'payment',
+                    'issuedTickets'
+                ]),
+            ]);
+
+        } catch (\Exception $e) {
+
+            DB::rollBack();
+
+            return response()->json([
+                'status' => false,
+                'message' => 'Gagal memproses pembayaran.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
 }
