@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\MidtransController;
 use App\Http\Controllers\Api\IssuedTicketController;
+use App\Http\Controllers\Api\ScannerController;
 
 /*
 |--------------------------------------------------------------------------
@@ -29,6 +30,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
 
     Route::get('/my-tickets', [IssuedTicketController::class, 'myTickets']);
+
+    // Admin — riwayat scan QR (semua tiket berstatus used)
+    Route::get('/issued-tickets', [IssuedTicketController::class, 'scannedTickets']);
+
+    Route::post('/scanner/scan', [ScannerController::class, 'scan']);
 });
 
 /*

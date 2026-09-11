@@ -14,9 +14,11 @@ import TiketView from '../views/admin/TiketView.vue'
 import PesananView from '../views/admin/PesananView.vue'
 import PenggunaView from '../views/admin/PenggunaView.vue'
 import PembayaranView from '../views/admin/PembayaranView.vue'
+import ScanQRView from '../views/admin/ScanQRView.vue'
 import ProfileView from '../views/ProfileView.vue'
 import WishlistView from '../views/WishlistView.vue'
 import MyTicketsView from '../views/MyTicketsView.vue'
+import ScannerView from '../views/ScannerView.vue'
 import GoogleCallbackView from '../views/GoogleCallbackView.vue'
 
 const router = createRouter({
@@ -86,6 +88,12 @@ const router = createRouter({
       meta: { requiresAuth: true, requiresAdmin: true }
     },
     {
+      path: '/admin/scan-qr',
+      name: 'admin-scan-qr',
+      component: ScanQRView,
+      meta: { requiresAuth: true, requiresAdmin: true }
+    },
+    {
       path: '/profile',
       name: 'profile',
       component: ProfileView,
@@ -101,7 +109,13 @@ const router = createRouter({
       path: '/my-tickets',
       name: 'my-tickets',
       component: MyTicketsView,
-        meta: { requiresAuth: true }
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/scanner',
+      name: 'scanner',
+      component: () => import('../views/ScannerView.vue'),
+      meta: {requiresAuth: true, requiresScanner: true}
     },
     {
       path: '/auth/google/callback',
@@ -113,6 +127,7 @@ const router = createRouter({
 
 router.beforeEach((to, from, next) => {
   const token = localStorage.getItem('token')
+
   let user = null
 
   try {
@@ -121,12 +136,54 @@ router.beforeEach((to, from, next) => {
     user = null
   }
 
+  // =====================================
+  // BELUM LOGIN
+  // =====================================
   if (to.meta.requiresAuth && !token) {
     next('/login')
     return
   }
 
-  if (to.meta.requiresAdmin && user?.role !== 'admin') {
+  // =====================================
+  // AKUN SCANNER
+  // Scanner selalu diarahkan ke /scanner
+  // =====================================
+  if (user?.role === 'scanner') {
+
+    // Kalau scanner membuka Home
+    if (to.path === '/') {
+      next('/scanner')
+      return
+    }
+
+    // Kalau scanner mencoba membuka halaman lain
+    if (
+      to.path !== '/scanner' &&
+      to.path !== '/login'
+    ) {
+      next('/scanner')
+      return
+    }
+  }
+
+  // =====================================
+  // ADMIN
+  // =====================================
+  if (
+    to.meta.requiresAdmin &&
+    user?.role !== 'admin'
+  ) {
+    next('/')
+    return
+  }
+
+  // =====================================
+  // SCANNER
+  // =====================================
+  if (
+    to.meta.requiresScanner &&
+    user?.role !== 'scanner'
+  ) {
     next('/')
     return
   }

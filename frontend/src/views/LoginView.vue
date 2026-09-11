@@ -193,9 +193,13 @@ export default {
           'success'
         )
 
-        setTimeout(() => {
+      setTimeout(() => {
+          if (data.user.role === 'scanner') {
+          this.$router.push('/scanner')
+        } else {
           this.$router.push('/')
-        }, 500)
+        }
+      }, 500)
 
       } catch (error) {
 

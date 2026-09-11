@@ -32,4 +32,36 @@ class IssuedTicketController extends Controller
             'data' => $tickets,
         ]);
     }
+
+    /**
+     * [ADMIN] Ambil semua tiket yang sudah ter-scan (status = used)
+     */
+    public function scannedTickets(Request $request)
+    {
+        $query = IssuedTicket::with([
+            'ticket.event',
+            'order.user',
+            'orderDetail',
+            'scanner',
+        ])
+        ->where('status', 'used');
+
+        // Filter tanggal scan dari
+        if ($request->filled('date_from')) {
+            $query->whereDate('scanned_at', '>=', $request->date_from);
+        }
+
+        // Filter tanggal scan sampai
+        if ($request->filled('date_to')) {
+            $query->whereDate('scanned_at', '<=', $request->date_to);
+        }
+
+        $tickets = $query->orderBy('scanned_at', 'desc')->get();
+
+        return response()->json([
+            'status'  => true,
+            'message' => 'Riwayat scan berhasil diambil.',
+            'data'    => $tickets,
+        ]);
+    }
 }

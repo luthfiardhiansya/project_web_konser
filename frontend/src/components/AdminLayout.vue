@@ -131,6 +131,16 @@ const closeSidebar = () => {
           <span>Pembayaran</span>
         </RouterLink>
 
+
+        <RouterLink
+          to="/admin/scan-qr"
+          class="nav-item"
+          @click="closeSidebar"
+        >
+          <i class="fa-solid fa-qrcode"></i>
+          <span>Scan QR</span>
+        </RouterLink>
+
       </nav>
 
 
