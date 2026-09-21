@@ -12,6 +12,7 @@
       @filter-category="filterCategoryQuick"
     />
 
+
     <!-- =========================
          MAIN CONTENT
     ========================== -->
@@ -19,24 +20,38 @@
 
       <div class="max-w-6xl mx-auto">
 
-        <!-- HEADER -->
+
+        <!-- =========================
+             HEADER
+        ========================== -->
         <div class="mb-6">
 
-          <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+          <div
+            class="flex flex-col md:flex-row md:items-end md:justify-between gap-4"
+          >
 
             <div>
-              <p class="text-xs md:text-sm font-black uppercase tracking-wide">
+
+              <p
+                class="text-xs md:text-sm font-black uppercase tracking-wide"
+              >
                 InfoMusikBDG
               </p>
 
-              <h1 class="text-3xl md:text-5xl font-black uppercase mt-1">
+              <h1
+                class="text-3xl md:text-5xl font-black uppercase mt-1"
+              >
                 E-TICKET SAYA
               </h1>
 
-              <p class="mt-2 text-sm md:text-base font-bold text-gray-600">
+              <p
+                class="mt-2 text-sm md:text-base font-bold text-gray-600"
+              >
                 Tiket event yang sudah kamu beli.
               </p>
+
             </div>
+
 
             <button
               @click="navigateTo('view-home')"
@@ -58,6 +73,7 @@
         >
 
           <div class="flex items-center justify-between mb-4">
+
             <h2 class="font-black uppercase text-lg">
               Filter Tiket
             </h2>
@@ -69,15 +85,20 @@
             >
               Reset
             </button>
+
           </div>
 
 
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div
+            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
+          >
 
             <!-- SEARCH -->
-            <div class="lg:col-span-1">
+            <div>
 
-              <label class="block text-xs font-black uppercase mb-2">
+              <label
+                class="block text-xs font-black uppercase mb-2"
+              >
                 Cari Tiket
               </label>
 
@@ -94,7 +115,9 @@
             <!-- STATUS -->
             <div>
 
-              <label class="block text-xs font-black uppercase mb-2">
+              <label
+                class="block text-xs font-black uppercase mb-2"
+              >
                 Status
               </label>
 
@@ -102,6 +125,7 @@
                 v-model="statusFilter"
                 class="w-full border-4 border-black bg-white px-3 py-3 text-sm font-bold outline-none"
               >
+
                 <option value="all">
                   Semua Status
                 </option>
@@ -113,6 +137,7 @@
                 <option value="used">
                   Sudah Digunakan
                 </option>
+
               </select>
 
             </div>
@@ -121,7 +146,9 @@
             <!-- DARI TANGGAL -->
             <div>
 
-              <label class="block text-xs font-black uppercase mb-2">
+              <label
+                class="block text-xs font-black uppercase mb-2"
+              >
                 Dari Tanggal Pesan
               </label>
 
@@ -137,7 +164,9 @@
             <!-- SAMPAI TANGGAL -->
             <div>
 
-              <label class="block text-xs font-black uppercase mb-2">
+              <label
+                class="block text-xs font-black uppercase mb-2"
+              >
                 Sampai Tanggal Pesan
               </label>
 
@@ -156,11 +185,15 @@
           <div
             class="mt-4 border-t-2 border-black pt-3 text-xs md:text-sm font-bold"
           >
+
             Menampilkan
+
             <span class="font-black">
               {{ filteredTickets.length }}
             </span>
+
             tiket
+
           </div>
 
         </div>
@@ -173,9 +206,11 @@
           v-if="loading"
           class="border-4 border-black bg-white p-8 text-center shadow-[6px_6px_0_#000]"
         >
+
           <p class="font-black text-xl uppercase">
             MEMUAT E-TICKET...
           </p>
+
         </div>
 
 
@@ -254,23 +289,31 @@
             "
           >
 
+
             <!-- =========================
                  TICKET HEADER
             ========================== -->
             <div class="border-b-4 border-black p-4 md:p-5">
 
-              <div class="flex items-start justify-between gap-3">
+              <div
+                class="flex items-start justify-between gap-3"
+              >
 
                 <div class="min-w-0">
 
-                  <p class="text-[10px] md:text-xs font-black uppercase">
+                  <p
+                    class="text-[10px] md:text-xs font-black uppercase"
+                  >
                     E-TICKET #{{ ticketNumber(index) }}
                   </p>
 
                   <h2
                     class="text-xl md:text-2xl font-black uppercase mt-2 break-words"
                   >
-                    {{ ticket.ticket?.event?.nama_event || 'Nama Event' }}
+                    {{
+                      ticket.ticket?.event?.nama_event ||
+                      'Nama Event'
+                    }}
                   </h2>
 
                 </div>
@@ -285,11 +328,13 @@
                       : 'bg-yellow-300 text-black'
                   "
                 >
+
                   {{
                     ticket.status === 'used'
                       ? 'Sudah Digunakan'
                       : 'Belum Digunakan'
                   }}
+
                 </span>
 
               </div>
@@ -302,13 +347,17 @@
             ========================== -->
             <div class="p-4 md:p-5">
 
+
               <!-- INFO -->
               <div class="grid grid-cols-2 gap-4 mb-5">
 
-                <!-- JENIS -->
+
+                <!-- JENIS TIKET -->
                 <div>
 
-                  <p class="text-[10px] md:text-xs font-black text-gray-500 uppercase">
+                  <p
+                    class="text-[10px] md:text-xs font-black text-gray-500 uppercase"
+                  >
                     Jenis Tiket
                   </p>
 
@@ -319,10 +368,12 @@
                 </div>
 
 
-                <!-- KODE -->
+                <!-- KODE PESANAN -->
                 <div>
 
-                  <p class="text-[10px] md:text-xs font-black text-gray-500 uppercase">
+                  <p
+                    class="text-[10px] md:text-xs font-black text-gray-500 uppercase"
+                  >
                     Kode Pesanan
                   </p>
 
@@ -336,7 +387,9 @@
                 <!-- TANGGAL PESAN -->
                 <div>
 
-                  <p class="text-[10px] md:text-xs font-black text-gray-500 uppercase">
+                  <p
+                    class="text-[10px] md:text-xs font-black text-gray-500 uppercase"
+                  >
                     Tanggal Pesan
                   </p>
 
@@ -350,7 +403,9 @@
                 <!-- WAKTU EVENT -->
                 <div>
 
-                  <p class="text-[10px] md:text-xs font-black text-gray-500 uppercase">
+                  <p
+                    class="text-[10px] md:text-xs font-black text-gray-500 uppercase"
+                  >
                     Waktu Event
                   </p>
 
@@ -364,7 +419,9 @@
                 <!-- LOKASI -->
                 <div class="col-span-2">
 
-                  <p class="text-[10px] md:text-xs font-black text-gray-500 uppercase">
+                  <p
+                    class="text-[10px] md:text-xs font-black text-gray-500 uppercase"
+                  >
                     Lokasi Event
                   </p>
 
@@ -389,7 +446,9 @@
                 "
               >
 
-                <p class="font-black text-sm uppercase mb-3">
+                <p
+                  class="font-black text-sm uppercase mb-3"
+                >
                   {{
                     ticket.status === 'used'
                       ? 'TIKET SUDAH DIGUNAKAN'
@@ -398,9 +457,10 @@
                 </p>
 
 
+                <!-- QR IMAGE -->
                 <div
                   :id="'qr-' + ticket.id"
-                  class="flex justify-center"
+                  class="flex justify-center items-center min-h-[220px]"
                   :class="
                     ticket.status === 'used'
                       ? 'opacity-40 grayscale'
@@ -410,6 +470,7 @@
                 </div>
 
 
+                <!-- QR TOKEN -->
                 <p
                   class="text-[9px] md:text-xs text-gray-500 mt-3 break-all font-bold"
                 >
@@ -419,7 +480,9 @@
               </div>
 
 
-              <!-- USED INFO -->
+              <!-- =========================
+                   USED INFO
+              ========================== -->
               <div
                 v-if="ticket.status === 'used'"
                 class="mt-4 border-2 border-black bg-gray-400 p-3"
@@ -529,6 +592,7 @@ import { useRouter } from 'vue-router'
 import QRCode from 'qrcode'
 
 import api from '../utils/api'
+import { showHomeFlash } from '../utils/flash'
 
 import Navbar from '../components/Navbar.vue'
 import Footer from '../components/Footer.vue'
@@ -624,6 +688,7 @@ const navigateTo = (viewName) => {
     default:
       router.push('/')
       break
+
   }
 
 }
@@ -682,6 +747,8 @@ const getTickets = async () => {
 
     currentPage.value = 1
 
+    loading.value = false
+
     await nextTick()
 
     await renderQRCodes()
@@ -695,15 +762,25 @@ const getTickets = async () => {
       error.value =
         'Sesi login kamu sudah habis. Silakan login kembali.'
 
+      showHomeFlash(
+        'Sesi login kamu sudah habis. Silakan login kembali.',
+        'warning',
+        'SESI BERAKHIR'
+      )
+
     } else {
 
       error.value =
         err.response?.data?.message ||
         'Terjadi kesalahan saat mengambil E-Ticket.'
 
-    }
+      showHomeFlash(
+        error.value,
+        'error',
+        'GAGAL MEMUAT TIKET'
+      )
 
-  } finally {
+    }
 
     loading.value = false
 
@@ -714,7 +791,7 @@ const getTickets = async () => {
 
 /*
 |--------------------------------------------------------------------------
-| RENDER QR
+| RENDER QR CODE
 |--------------------------------------------------------------------------
 */
 
@@ -727,34 +804,93 @@ const renderQRCodes = async () => {
     const element =
       document.getElementById(`qr-${ticket.id}`)
 
-    if (!element || !ticket.qr_token) {
+    if (!element) {
       continue
     }
 
-    element.innerHTML = ''
+    if (!ticket.qr_token) {
+      continue
+    }
 
-    const canvas =
-      document.createElement('canvas')
 
     try {
 
-      await QRCode.toCanvas(
-        canvas,
-        ticket.qr_token,
-        {
-          width: 200,
-          margin: 2
-        }
-      )
+      /*
+      | Bersihkan QR lama
+      */
 
-      element.appendChild(canvas)
+      element.innerHTML = ''
 
-    } catch (error) {
+
+      /*
+      | Buat QR sebagai DATA URL
+      */
+
+      const qrDataUrl =
+        await QRCode.toDataURL(
+          ticket.qr_token,
+          {
+            width: 200,
+            margin: 2,
+            errorCorrectionLevel: 'M'
+          }
+        )
+
+
+      /*
+      | Buat image
+      */
+
+      const image =
+        document.createElement('img')
+
+      image.src = qrDataUrl
+
+      image.alt = 'QR Ticket'
+
+      image.width = 200
+
+      image.height = 200
+
+      image.style.width = '200px'
+
+      image.style.height = '200px'
+
+      image.style.display = 'block'
+
+
+      /*
+      | Untuk tiket yang sudah digunakan,
+      | QR tetap ada tetapi dibuat abu-abu
+      */
+
+      if (ticket.status === 'used') {
+
+        image.style.filter =
+          'grayscale(100%)'
+
+        image.style.opacity = '0.4'
+
+      }
+
+
+      element.appendChild(image)
+
+    } catch (qrError) {
 
       console.error(
-        'QR gagal dibuat:',
-        error
+        'QR gagal dibuat untuk tiket:',
+        ticket.id,
+        qrError
       )
+
+      element.innerHTML = `
+        <div class="py-10 text-center">
+          <p class="font-black text-red-700 uppercase">
+            QR GAGAL DITAMPILKAN
+          </p>
+        </div>
+      `
 
     }
 
@@ -768,10 +904,13 @@ const renderQRCodes = async () => {
 | ORDER DATE
 |--------------------------------------------------------------------------
 |
-| Prioritas:
-| order.created_at
-| lalu issued ticket created_at
+| Tanggal yang digunakan adalah tanggal PESAN.
 |
+| Prioritas:
+| 1. order.created_at
+| 2. issued ticket created_at
+|
+|--------------------------------------------------------------------------
 */
 
 const getOrderDateValue = (ticket) => {
@@ -850,7 +989,9 @@ const filteredTickets = computed(() => {
 
 
   /*
+  |--------------------------------------------------------------------------
   | SEARCH
+  |--------------------------------------------------------------------------
   */
 
   const keyword =
@@ -891,7 +1032,9 @@ const filteredTickets = computed(() => {
 
 
   /*
+  |--------------------------------------------------------------------------
   | STATUS
+  |--------------------------------------------------------------------------
   */
 
   if (statusFilter.value !== 'all') {
@@ -906,7 +1049,9 @@ const filteredTickets = computed(() => {
 
 
   /*
+  |--------------------------------------------------------------------------
   | DATE FROM
+  |--------------------------------------------------------------------------
   */
 
   if (dateFrom.value) {
@@ -933,7 +1078,9 @@ const filteredTickets = computed(() => {
 
 
   /*
+  |--------------------------------------------------------------------------
   | DATE TO
+  |--------------------------------------------------------------------------
   */
 
   if (dateTo.value) {
@@ -966,7 +1113,7 @@ const filteredTickets = computed(() => {
 
 /*
 |--------------------------------------------------------------------------
-| PAGINATION
+| TOTAL PAGES
 |--------------------------------------------------------------------------
 */
 
@@ -982,6 +1129,12 @@ const totalPages = computed(() => {
 
 })
 
+
+/*
+|--------------------------------------------------------------------------
+| PAGINATED TICKETS
+|--------------------------------------------------------------------------
+*/
 
 const paginatedTickets = computed(() => {
 

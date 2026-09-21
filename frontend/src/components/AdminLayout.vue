@@ -141,6 +141,14 @@ const closeSidebar = () => {
           <span>Scan QR</span>
         </RouterLink>
 
+        <RouterLink
+          to="/admin/laporan"
+          class="nav-item"
+          @click="closeSidebar"
+        >
+          <i class="fa-solid fa-chart-pie"></i>
+          <span>Laporan & Statistik</span>
+        </RouterLink>
       </nav>
 
 

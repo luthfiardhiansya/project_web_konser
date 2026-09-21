@@ -83,25 +83,19 @@
 
 </div>
 
-      <!-- CONTENT -->
       <div
         class="grid min-h-0 flex-1 grid-cols-1 gap-5 md:grid-cols-2"
       >
 
-        <!-- ================================= -->
-        <!-- KIRI : QR SCANNER -->
-        <!-- ================================= -->
         <div
           class="flex min-h-0 flex-col border-4 border-black bg-white p-3 shadow-[6px_6px_0_#000]"
         >
 
-          <!-- CAMERA -->
           <div
             id="qr-reader"
             class="w-full flex-1 overflow-hidden"
           ></div>
 
-          <!-- LOADING -->
           <div
             v-if="loading"
             class="mt-3 shrink-0 border-4 border-black bg-yellow-300 p-3 text-center font-black shadow-[4px_4px_0_#000]"
@@ -111,15 +105,10 @@
 
         </div>
 
-
-        <!-- ================================= -->
-        <!-- KANAN : HASIL SCAN -->
-        <!-- ================================= -->
         <div
           class="min-h-0 overflow-hidden"
         >
 
-          <!-- BELUM ADA HASIL -->
           <div
             v-if="!message"
             class="flex h-full items-center justify-center border-4 border-dashed border-black bg-white p-6 text-center"
@@ -131,7 +120,7 @@
               </div>
 
               <p class="mt-3 font-bold">
-                Arahkan kamera ke QR Ticket.
+                Arahkan kamera ke QR Ticket
               </p>
 
             </div>
@@ -152,14 +141,12 @@
               class="mb-5 flex items-center gap-4 border-b-4 border-black pb-4"
             >
 
-              <!-- ICON -->
               <div
                 class="flex h-14 w-14 shrink-0 items-center justify-center border-4 border-black bg-green-400 text-3xl font-black"
               >
                 ✓
               </div>
 
-              <!-- MESSAGE -->
               <div>
 
                 <p
@@ -350,6 +337,7 @@ import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import { Html5Qrcode } from 'html5-qrcode'
 import api from '../utils/api'
+import { showHomeFlash } from '../utils/flash'
 
 const router = useRouter()
 
@@ -542,9 +530,15 @@ const startScanner = async () => {
           scanResult.value =
             response.data.data
 
-
           /* SOUND */
           playSuccessSound()
+
+          /* FLASH */
+          showHomeFlash(
+            `Tiket atas nama ${scanResult.value?.nama_pemesan || 'pemesan'} berhasil divalidasi.`,
+            'success',
+            'TIKET VALID ✓'
+          )
 
 
         } catch (error) {
@@ -559,13 +553,41 @@ const startScanner = async () => {
             error.response?.data?.message ||
             'Gagal memproses QR Ticket.'
 
-
           scanResult.value =
             error.response?.data?.data || null
 
-
           /* SOUND ERROR */
           playErrorSound()
+
+          /* FLASH — bedakan pesan sesuai status */
+          const errStatus = error.response?.status
+          const errMsg    = error.response?.data?.message || 'Gagal memproses QR Ticket.'
+
+          if (errStatus === 409) {
+            showHomeFlash(
+              errMsg,
+              'warning',
+              'TIKET SUDAH DIGUNAKAN'
+            )
+          } else if (errStatus === 404) {
+            showHomeFlash(
+              'QR Ticket tidak ditemukan atau tidak valid.',
+              'error',
+              'TIKET TIDAK DITEMUKAN'
+            )
+          } else if (errStatus === 422) {
+            showHomeFlash(
+              'Tiket belum memiliki pembayaran yang valid.',
+              'warning',
+              'PEMBAYARAN BELUM VALID'
+            )
+          } else {
+            showHomeFlash(
+              errMsg,
+              'error',
+              'SCAN GAGAL'
+            )
+          }
 
         } finally {
 
@@ -604,6 +626,12 @@ const startScanner = async () => {
 
     message.value =
       'Kamera tidak dapat digunakan. Pastikan izin kamera diberikan.'
+
+    showHomeFlash(
+      'Kamera tidak dapat digunakan. Pastikan izin kamera sudah diberikan.',
+      'error',
+      'KAMERA GAGAL'
+    )
 
   }
 

@@ -96,42 +96,58 @@
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <div v-for="event in events.slice(0, 3)" :key="event.id" class="nb-card !bg-white flex flex-col justify-between nb-card-hover">
+              <div
+                v-for="event in events.slice(0, 3)"
+                :key="event.id"
+                class="nb-card flex flex-col justify-between nb-card-hover"
+                :class="isPastEvent(event) ? '!bg-gray-100 opacity-75 grayscale' : '!bg-white'"
+              >
                 <div>
                   <div class="relative">
                     <img :src="event.image" :alt="event.title" class="w-full h-48 object-cover border-b-2 border-ink">
+                    <!-- Badge Event Berakhir -->
+                    <div v-if="isPastEvent(event)" class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                      <span class="bg-gray-800 text-white text-xs font-black uppercase px-3 py-1.5 border-2 border-white shadow-lg tracking-widest">
+                        EVENT BERAKHIR
+                      </span>
+                    </div>
                     <button
-  @click="toggleFavorite(event)"
-  :data-favorite-id="event.id"
-  class="absolute top-2 right-2 p-1.5 bg-white nb-border hover:bg-accent"
->
-  <svg
-    class="w-4 h-4"
-    :fill="favorites.includes(event.id) ? '#111111' : 'none'"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-  >
-    <path
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="2.5"
-      d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.684a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-    />
-  </svg>
-</button>
+                      @click="toggleFavorite(event)"
+                      :data-favorite-id="event.id"
+                      class="absolute top-2 right-2 p-1.5 bg-white nb-border hover:bg-accent"
+                    >
+                      <svg
+                        class="w-4 h-4"
+                        :fill="favorites.includes(event.id) ? '#111111' : 'none'"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2.5"
+                          d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.684a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                        />
+                      </svg>
+                    </button>
                   </div>
                   <div class="p-4 space-y-2">
                     <div class="text-xs font-bold text-muted uppercase">📅 {{ event.date }} • {{ event.time }}</div>
-                    <h3 class="font-black text-xl uppercase leading-tight">{{ event.title }}</h3>
+                    <h3 class="font-black text-xl uppercase leading-tight" :class="isPastEvent(event) ? 'text-gray-500' : ''">{{ event.title }}</h3>
                     <div class="text-xs font-semibold text-ink/80">📍 {{ event.venue }}, {{ event.location }}</div>
+                    <!-- Keterangan event berakhir di bawah judul -->
+                    <p v-if="isPastEvent(event)" class="text-xs font-black text-gray-500 uppercase flex items-center gap-1">
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                      Event sudah berakhir
+                    </p>
                   </div>
                 </div>
                 <div class="p-4 pt-0 flex items-center justify-between border-t border-ink/20 mt-4">
                   <div>
                     <div class="text-[10px] font-bold text-muted uppercase">Mulai Dari</div>
-                    <div class="font-black text-sm">Rp {{ formatNumber(event.minPrice) }}</div>
+                    <div class="font-black text-sm" :class="isPastEvent(event) ? 'text-gray-500' : ''">Rp {{ formatNumber(event.minPrice) }}</div>
                   </div>
-                  <button @click="openEventDetail(event.id)" class="nb-btn nb-btn-primary px-3 py-1.5 text-xs uppercase">
+                  <button @click="openEventDetail(event.id)" class="nb-btn px-3 py-1.5 text-xs uppercase" :class="isPastEvent(event) ? 'nb-btn-secondary opacity-60' : 'nb-btn-primary'">
                     Detail Event
                   </button>
                 </div>
@@ -198,19 +214,39 @@
             Menampilkan {{ filteredEvents.length }} Event Musik
           </div>
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div v-for="event in filteredEvents" :key="event.id" class="nb-card bg-white flex flex-col justify-between nb-card-hover">
+            <div
+              v-for="event in filteredEvents"
+              :key="event.id"
+              class="nb-card flex flex-col justify-between nb-card-hover"
+              :class="isPastEvent(event) ? 'bg-gray-100 opacity-75 grayscale' : 'bg-white'"
+            >
               <div>
-                <img :src="event.image" :alt="event.title" class="w-full h-48 object-cover border-b-2 border-ink">
+                <div class="relative">
+                  <img :src="event.image" :alt="event.title" class="w-full h-48 object-cover border-b-2 border-ink">
+                  <!-- Badge Event Berakhir -->
+                  <div v-if="isPastEvent(event)" class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <span class="bg-gray-800 text-white text-xs font-black uppercase px-3 py-1.5 border-2 border-white shadow-lg tracking-widest">
+                      EVENT BERAKHIR
+                    </span>
+                  </div>
+                </div>
                 <div class="p-4 space-y-2">
-                  <span class="bg-accent text-ink font-black text-xs px-2 py-0.5 nb-border uppercase">{{ event.category }}</span>
-                  <h3 class="font-black text-xl uppercase leading-tight pt-1">{{ event.title }}</h3>
+                  <span
+                    class="font-black text-xs px-2 py-0.5 nb-border uppercase"
+                    :class="isPastEvent(event) ? 'bg-gray-300 text-gray-600' : 'bg-accent text-ink'"
+                  >{{ event.category }}</span>
+                  <h3 class="font-black text-xl uppercase leading-tight pt-1" :class="isPastEvent(event) ? 'text-gray-500' : ''">{{ event.title }}</h3>
                   <p class="text-xs font-bold text-muted">📅 {{ event.date }} • {{ event.time }}</p>
                   <p class="text-xs font-semibold text-ink/80">📍 {{ event.venue }}</p>
+                  <p v-if="isPastEvent(event)" class="text-xs font-black text-gray-500 uppercase flex items-center gap-1">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    Event sudah berakhir
+                  </p>
                 </div>
               </div>
               <div class="p-4 pt-0 flex justify-between items-center border-t border-ink/10 mt-2">
-                <span class="font-black text-sm">Rp {{ formatNumber(event.minPrice) }}</span>
-                <button @click="openEventDetail(event.id)" class="nb-btn nb-btn-primary px-3 py-1 text-xs uppercase">Detail</button>
+                <span class="font-black text-sm" :class="isPastEvent(event) ? 'text-gray-500' : ''">Rp {{ formatNumber(event.minPrice) }}</span>
+                <button @click="openEventDetail(event.id)" class="nb-btn px-3 py-1 text-xs uppercase" :class="isPastEvent(event) ? 'nb-btn-secondary opacity-60' : 'nb-btn-primary'">Detail</button>
               </div>
             </div>
           </div>
@@ -801,6 +837,18 @@ favorites: JSON.parse(localStorage.getItem('wishlist') || '[]').map(item => item
     },
 
     methods: {
+      // ==========================================
+      // CEK APAKAH EVENT SUDAH LEWAT TANGGALNYA
+      // ==========================================
+      isPastEvent(event) {
+        if (!event.date) return false
+        const today = new Date()
+        today.setHours(0, 0, 0, 0)
+        const eventDate = new Date(event.date)
+        eventDate.setHours(0, 0, 0, 0)
+        return eventDate < today
+      },
+
       animateFavoriteToNavbar(event) {
   const button = document.querySelector(
     `button[data-favorite-id="${event.id}"]`
@@ -813,47 +861,78 @@ favorites: JSON.parse(localStorage.getItem('wishlist') || '[]').map(item => item
   if (!button || !wishlistButton) return
 
   const start = button.getBoundingClientRect()
-  const end = wishlistButton.getBoundingClientRect()
+  const end   = wishlistButton.getBoundingClientRect()
 
-  const heart = document.createElement('div')
-
-  heart.innerHTML = '♥'
-
-  heart.style.position = 'fixed'
-  heart.style.left = `${start.left + start.width / 2}px`
-  heart.style.top = `${start.top + start.height / 2}px`
-  heart.style.fontSize = '20px'
-  heart.style.fontWeight = '900'
-  heart.style.color = '#111111'
-  heart.style.zIndex = '9999'
-  heart.style.pointerEvents = 'none'
-  heart.style.transition = `
-    left 0.6s cubic-bezier(.2,.8,.2,1),
-    top 0.6s cubic-bezier(.2,.8,.2,1),
-    transform 0.6s cubic-bezier(.2,.8,.2,1),
-    opacity 0.6s ease
+  // ── 1. Ripple effect pada tombol sumber ──────────────────
+  const ripple = document.createElement('div')
+  ripple.style.cssText = `
+    position: fixed;
+    left: ${start.left + start.width / 2}px;
+    top: ${start.top + start.height / 2}px;
+    width: 8px; height: 8px;
+    background: #FFD84D;
+    border: 2px solid #111;
+    border-radius: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    pointer-events: none;
+    z-index: 9998;
+    transition: transform 0.35s cubic-bezier(.2,.8,.2,1), opacity 0.35s ease;
   `
-  heart.style.transform = 'translate(-50%, -50%) scale(1.4)'
+  document.body.appendChild(ripple)
+  requestAnimationFrame(() => {
+    ripple.style.transform = 'translate(-50%, -50%) scale(5)'
+    ripple.style.opacity = '0'
+  })
+  setTimeout(() => ripple.remove(), 380)
 
+  // ── 2. Hati terbang ──────────────────────────────────────
+  const heart = document.createElement('div')
+  heart.innerHTML = '♥'
+  heart.style.cssText = `
+    position: fixed;
+    left: ${start.left + start.width / 2}px;
+    top: ${start.top + start.height / 2}px;
+    font-size: 22px;
+    font-weight: 900;
+    color: #111;
+    text-shadow: 2px 2px 0 #FFD84D;
+    z-index: 9999;
+    pointer-events: none;
+    transform: translate(-50%, -50%) scale(1.4);
+    transition:
+      left 0.55s cubic-bezier(.2,.8,.2,1),
+      top 0.55s cubic-bezier(.2,.8,.2,1),
+      transform 0.55s cubic-bezier(.2,.8,.2,1),
+      opacity 0.25s ease 0.35s;
+  `
   document.body.appendChild(heart)
 
+  // Mulai animasi setelah satu frame
   requestAnimationFrame(() => {
-    heart.style.left = `${end.left + end.width / 2}px`
-    heart.style.top = `${end.top + end.height / 2}px`
-    heart.style.transform = 'translate(-50%, -50%) scale(0.5)'
+    heart.style.left    = `${end.left + end.width / 2}px`
+    heart.style.top     = `${end.top  + end.height / 2}px`
+    heart.style.transform = 'translate(-50%, -50%) scale(0.6)'
     heart.style.opacity = '0'
   })
 
+  // ── 3. Bounce + flash setelah hati sampai ────────────────
   setTimeout(() => {
     heart.remove()
 
-    // Efek loncat kecil pada tombol wishlist
+    // Bounce pada tombol wishlist di navbar
     wishlistButton.classList.add('wishlist-bounce')
+    setTimeout(() => wishlistButton.classList.remove('wishlist-bounce'), 500)
 
-    setTimeout(() => {
-      wishlistButton.classList.remove('wishlist-bounce')
-    }, 400)
-  }, 650)
+    // Flash message
+    const eventName = event.nama_event || event.name || event.title || 'Event'
+    window.dispatchEvent(new CustomEvent('show-flash', {
+      detail: {
+        title: 'DITAMBAHKAN KE FAVORIT ♥',
+        message: `${eventName} berhasil disimpan ke wishlist kamu!`,
+        type: 'success'
+      }
+    }))
+  }, 580)
 },
       // ==========================================
       // LOAD USER

@@ -149,6 +149,7 @@
 import Navbar from '../components/Navbar.vue'
 import Footer from '../components/Footer.vue'
 import api from '../utils/api'
+import { showHomeFlash } from '../utils/flash'
 
 export default {
 
@@ -229,7 +230,6 @@ export default {
           data.user ||
           null
 
-        // Simpan data user terbaru
         if (this.user) {
 
           localStorage.setItem(
@@ -245,10 +245,6 @@ export default {
           'Gagal mengambil data profile:',
           error
         )
-
-        // ======================================
-        // FALLBACK LOCAL STORAGE
-        // ======================================
 
         const savedUser =
           localStorage.getItem('user')
@@ -284,7 +280,6 @@ export default {
 
     async logout() {
 
-      // Cegah tombol diklik berkali-kali
       if (this.isLoggingOut) {
         return
       }
@@ -292,10 +287,6 @@ export default {
       this.isLoggingOut = true
 
       try {
-
-        // ======================================
-        // LOGOUT DARI BACKEND
-        // ======================================
 
         const token =
           localStorage.getItem('token')
@@ -315,23 +306,19 @@ export default {
 
       } finally {
 
-        // ======================================
-        // HAPUS DATA LOGIN
-        // ======================================
-
         localStorage.removeItem('token')
 
         localStorage.removeItem('user')
 
-        // Reset user
         this.user = null
 
-        // Reset status
         this.isLoggingOut = false
 
-        // ======================================
-        // KEMBALI KE HOME
-        // ======================================
+        showHomeFlash(
+          'Kamu telah berhasil logout. Sampai jumpa!',
+          'info',
+          'LOGOUT BERHASIL'
+        )
 
         this.$router.push('/')
 

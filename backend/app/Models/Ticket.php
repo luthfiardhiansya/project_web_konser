@@ -29,4 +29,9 @@ class Ticket extends Model
     {
         return $this->hasMany(OrderDetail::class);
     }
+
+    public function issuedTickets()
+    {
+        return $this->hasMany(IssuedTicket::class);
+    }
 }

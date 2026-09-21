@@ -12,6 +12,8 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\MidtransController;
 use App\Http\Controllers\Api\IssuedTicketController;
 use App\Http\Controllers\Api\ScannerController;
+use App\Http\Controllers\Api\UploadController;
+use App\Http\Controllers\Api\ReportController;
 
 /*
 |--------------------------------------------------------------------------
@@ -35,6 +37,22 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/issued-tickets', [IssuedTicketController::class, 'scannedTickets']);
 
     Route::post('/scanner/scan', [ScannerController::class, 'scan']);
+
+    // Upload gambar poster event (admin)
+    Route::post('/upload-image', [UploadController::class, 'uploadImage']);
+
+    // ─── Laporan & Statistik ─────────────────────────────────────────────
+    Route::prefix('reports')->group(function () {
+        Route::get('/statistik',          [ReportController::class, 'statistik']);
+        Route::get('/penjualan',          [ReportController::class, 'penjualan']);
+        Route::get('/event',              [ReportController::class, 'laporanEvent']);
+        Route::get('/tiket',              [ReportController::class, 'laporanTiket']);
+        Route::get('/scan',               [ReportController::class, 'laporanScan']);
+        Route::get('/pengguna',           [ReportController::class, 'laporanPengguna']);
+        Route::get('/export/pdf/{type}',  [ReportController::class, 'exportPdf']);
+        Route::get('/export/excel/{type}',[ReportController::class, 'exportExcel']);
+        Route::post('/export/excel-page', [ReportController::class, 'exportExcelPage']);
+    });
 });
 
 /*

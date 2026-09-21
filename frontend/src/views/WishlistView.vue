@@ -119,33 +119,42 @@
             <article
               v-for="event in wishlist"
               :key="event.id"
-              class="bg-white border-4 border-black shadow-[6px_6px_0_#000] overflow-hidden"
+              class="border-4 border-black shadow-[6px_6px_0_#000] overflow-hidden transition-all"
+              :class="isPastEvent(event) ? 'bg-gray-200 opacity-75' : 'bg-white'"
             >
 
               <!-- IMAGE -->
               <div
-                class="relative h-52 bg-gray-200 overflow-hidden"
+                class="relative h-52 overflow-hidden"
+                :class="isPastEvent(event) ? 'bg-gray-400' : 'bg-gray-200'"
               >
 
                 <img
                   v-if="event.image || event.image_url || event.poster"
-                  :src="
-                    event.image ||
-                    event.image_url ||
-                    event.poster
-                  "
+                  :src="event.image || event.image_url || event.poster"
                   :alt="event.nama_event || event.name"
-                  class="w-full h-full object-cover"
+                  class="w-full h-full object-cover transition-all"
+                  :class="isPastEvent(event) ? 'grayscale' : ''"
                 />
 
                 <!-- FALLBACK -->
                 <div
                   v-else
-                  class="w-full h-full bg-[#7E22CE] flex items-center justify-center text-white"
+                  class="w-full h-full flex items-center justify-center text-white"
+                  :class="isPastEvent(event) ? 'bg-gray-500' : 'bg-[#7E22CE]'"
                 >
                   <i class="fa-solid fa-music text-5xl"></i>
                 </div>
 
+                <!-- Badge Event Berakhir -->
+                <div
+                  v-if="isPastEvent(event)"
+                  class="absolute inset-0 flex items-center justify-center pointer-events-none"
+                >
+                  <span class="bg-gray-800 text-white text-xs font-black uppercase px-3 py-1.5 border-2 border-white shadow-lg tracking-widest">
+                    EVENT BERAKHIR
+                  </span>
+                </div>
 
                 <!-- REMOVE BUTTON -->
                 <button
@@ -165,57 +174,58 @@
                 <!-- DATE -->
                 <p
                   v-if="event.tanggal || event.date"
-                  class="text-xs font-black uppercase text-[#7E22CE] mb-2"
+                  class="text-xs font-black uppercase mb-2"
+                  :class="isPastEvent(event) ? 'text-gray-500' : 'text-[#7E22CE]'"
                 >
                   <i class="fa-regular fa-calendar mr-1"></i>
-
                   {{ formatDate(event.tanggal || event.date) }}
                 </p>
-
 
                 <!-- TITLE -->
                 <h2
                   class="text-xl font-black uppercase leading-tight"
+                  :class="isPastEvent(event) ? 'text-gray-500' : ''"
                 >
                   {{ event.nama_event || event.name || 'Event' }}
                 </h2>
 
+                <!-- Keterangan event berakhir -->
+                <p v-if="isPastEvent(event)" class="mt-1 text-xs font-black text-gray-500 uppercase flex items-center gap-1">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                  Event sudah berakhir
+                </p>
 
                 <!-- LOCATION -->
                 <p
                   v-if="event.lokasi || event.location || event.venue"
                   class="mt-3 text-sm font-bold"
+                  :class="isPastEvent(event) ? 'text-gray-400' : ''"
                 >
                   <i class="fa-solid fa-location-dot mr-2"></i>
-
-                  {{
-                    event.lokasi ||
-                    event.location ||
-                    event.venue
-                  }}
+                  {{ event.lokasi || event.location || event.venue }}
                 </p>
 
 
-                <!-- PRICE -->
+                <!-- PRICE + DETAIL -->
                 <div
-                  class="flex items-center justify-between gap-3 mt-5 pt-4 border-t-2 border-black"
+                  class="flex items-center justify-between gap-3 mt-5 pt-4 border-t-2"
+                  :class="isPastEvent(event) ? 'border-gray-300' : 'border-black'"
                 >
 
                   <div>
-                    <p class="text-[10px] font-black uppercase">
+                    <p class="text-[10px] font-black uppercase" :class="isPastEvent(event) ? 'text-gray-400' : ''">
                       Mulai dari
                     </p>
-
-                    <p class="font-black">
-                      {{ formatPrice(event.harga || event.price) }}
+                    <p class="font-black" :class="isPastEvent(event) ? 'text-gray-500' : ''">
+                      {{ formatPrice(getMinPrice(event)) }}
                     </p>
                   </div>
-
 
                   <!-- DETAIL -->
                   <button
                     @click="openEvent(event.id)"
-                    class="border-3 border-black bg-[#FFD84D] px-4 py-2 font-black uppercase text-xs shadow-[3px_3px_0_#000] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all"
+                    class="border-4 border-black px-4 py-2 font-black uppercase text-xs shadow-[3px_3px_0_#000] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all"
+                    :class="isPastEvent(event) ? 'bg-gray-300 text-gray-600 shadow-[3px_3px_0_#777]' : 'bg-[#FFD84D]'"
                   >
                     Detail
                     <i class="fa-solid fa-arrow-right ml-1"></i>
@@ -246,6 +256,7 @@
 <script>
 import Navbar from '../components/Navbar.vue'
 import Footer from '../components/Footer.vue'
+import { showHomeFlash } from '../utils/flash'
 
 export default {
 
@@ -306,6 +317,42 @@ export default {
   methods: {
 
     // ==========================================
+    // CEK APAKAH EVENT SUDAH LEWAT TANGGAL
+    // ==========================================
+
+    isPastEvent(event) {
+      const dateStr = event.tanggal || event.date
+      if (!dateStr) return false
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      const eventDate = new Date(dateStr)
+      eventDate.setHours(0, 0, 0, 0)
+      return eventDate < today
+    },
+
+
+    // ==========================================
+    // AMBIL HARGA TERENDAH DARI EVENT
+    // Data wishlist bisa simpan field berbeda
+    // tergantung dari mana event di-save
+    // ==========================================
+
+    getMinPrice(event) {
+      // Jika ada field minPrice (dari HomeView mapping)
+      if (event.minPrice !== undefined && event.minPrice !== null) {
+        return event.minPrice
+      }
+      // Jika ada array tickets, ambil harga minimum
+      if (Array.isArray(event.tickets) && event.tickets.length > 0) {
+        const prices = event.tickets.map(t => Number(t.harga || t.price || 0))
+        return Math.min(...prices)
+      }
+      // Fallback ke field harga / price langsung
+      return event.harga || event.price || null
+    },
+
+
+    // ==========================================
     // LOAD WISHLIST
     // ==========================================
 
@@ -341,12 +388,21 @@ export default {
 
     removeFromWishlist(id) {
 
+      const event = this.wishlist.find(e => e.id === id)
+      const eventName = event?.nama_event || event?.name || 'Event'
+
       this.wishlist =
         this.wishlist.filter(
           event => event.id !== id
         )
 
       this.saveWishlist()
+
+      showHomeFlash(
+        `${eventName} dihapus dari wishlist.`,
+        'info',
+        'WISHLIST DIPERBARUI'
+      )
 
     },
 
@@ -370,9 +426,17 @@ export default {
         return
       }
 
+      const jumlah = this.wishlist.length
+
       this.wishlist = []
 
       this.saveWishlist()
+
+      showHomeFlash(
+        `${jumlah} event berhasil dihapus dari wishlist.`,
+        'info',
+        'WISHLIST DIKOSONGKAN'
+      )
 
     },
 

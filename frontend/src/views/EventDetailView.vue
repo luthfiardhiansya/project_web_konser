@@ -30,33 +30,58 @@
       <div v-else-if="event" class="grid grid-cols-1 lg:grid-cols-12 gap-8">
         <!-- LEFT COLUMN: POSTER & DETAILS -->
         <div class="lg:col-span-8 space-y-6">
-          <div class="relative nb-card bg-white p-2">
+
+          <!-- Banner Event Berakhir -->
+          <div v-if="isPastEvent" class="nb-card bg-gray-800 text-white p-4 flex items-center gap-3 border-2 border-gray-700">
+            <div class="w-10 h-10 shrink-0 bg-gray-600 border-2 border-gray-500 flex items-center justify-center text-xl">🏁</div>
+            <div>
+              <p class="font-black uppercase text-sm tracking-wide">Event Sudah Berakhir</p>
+              <p class="text-xs text-gray-400 font-medium mt-0.5">
+                Event ini telah selesai diselenggarakan pada {{ event.tanggal }}.
+                Pembelian tiket tidak lagi tersedia.
+              </p>
+            </div>
+          </div>
+
+          <div class="relative nb-card p-2" :class="isPastEvent ? 'bg-gray-200 grayscale' : 'bg-white'">
             <img :src="event.poster || defaultImage" :alt="event.nama_event" class="w-full h-80 sm:h-96 object-cover nb-border">
-            <span class="absolute top-4 left-4 bg-accent text-ink font-black text-xs px-3 py-1.5 nb-border uppercase">
+            <!-- Overlay badge di atas poster -->
+            <div v-if="isPastEvent" class="absolute inset-2 flex items-center justify-center pointer-events-none">
+              <span class="bg-gray-900/80 text-white text-sm font-black uppercase px-5 py-2.5 border-2 border-white/50 tracking-widest backdrop-blur-sm">
+                EVENT BERAKHIR
+              </span>
+            </div>
+            <span
+              class="absolute top-4 left-4 font-black text-xs px-3 py-1.5 nb-border uppercase"
+              :class="isPastEvent ? 'bg-gray-400 text-gray-700' : 'bg-accent text-ink'"
+            >
               {{ event.category?.nama_kategori || 'Event' }}
             </span>
           </div>
 
           <div>
-            <h1 class="text-3xl sm:text-4xl font-black uppercase tracking-tight text-ink">{{ event.nama_event }}</h1>
+            <h1
+              class="text-3xl sm:text-4xl font-black uppercase tracking-tight"
+              :class="isPastEvent ? 'text-gray-500' : 'text-ink'"
+            >{{ event.nama_event }}</h1>
             <p class="text-sm font-bold text-muted mt-1">Diselenggarakan oleh <span class="text-ink font-black">{{ event.organizer?.name || 'Info Musik BDG' }}</span></p>
           </div>
 
           <!-- TIME & LOCATION CARD -->
-          <div class="nb-card bg-white p-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div class="nb-card p-5 grid grid-cols-1 sm:grid-cols-2 gap-4" :class="isPastEvent ? 'bg-gray-100' : 'bg-white'">
             <div class="space-y-1">
               <div class="text-xs font-bold uppercase text-muted">🗓️ Waktu & Tanggal</div>
-              <div class="font-black text-base">{{ event.tanggal }} • {{ event.waktu }}</div>
+              <div class="font-black text-base" :class="isPastEvent ? 'text-gray-500' : ''">{{ event.tanggal }} • {{ event.waktu }}</div>
             </div>
             <div class="space-y-1">
               <div class="text-xs font-bold uppercase text-muted">📍 Lokasi / Venue</div>
-              <div class="font-black text-base">{{ event.lokasi }}</div>
+              <div class="font-black text-base" :class="isPastEvent ? 'text-gray-500' : ''">{{ event.lokasi }}</div>
               <div v-if="event.alamat" class="text-xs text-muted font-medium">{{ event.alamat }}</div>
             </div>
           </div>
 
           <!-- EVENT DESCRIPTION -->
-          <div class="nb-card bg-white p-6 space-y-3">
+          <div class="nb-card p-6 space-y-3" :class="isPastEvent ? 'bg-gray-100' : 'bg-white'">
             <h3 class="font-black text-xl uppercase border-b-2 border-ink pb-2">Deskripsi Event</h3>
             <p class="text-sm leading-relaxed font-medium text-ink/90 whitespace-pre-line">{{ event.deskripsi }}</p>
           </div>
@@ -64,45 +89,54 @@
 
         <!-- RIGHT COLUMN: TICKET SELECTION & CHECKOUT -->
         <div class="lg:col-span-4 space-y-4">
-          <div class="nb-card bg-white p-6 space-y-4 sticky top-24">
+          <div class="nb-card p-6 space-y-4 sticky top-24" :class="isPastEvent ? 'bg-gray-100' : 'bg-white'">
             <h3 class="font-black text-xl uppercase border-b-2 border-ink pb-2 flex items-center justify-between">
-              <span>PILIH TIKET</span>
-              <i class="fa-solid fa-ticket"></i>
+              <span>{{ isPastEvent ? 'TIKET DITUTUP' : 'PILIH TIKET' }}</span>
+              <i :class="isPastEvent ? 'fa-solid fa-lock text-gray-400' : 'fa-solid fa-ticket'"></i>
             </h3>
 
-            <div v-if="!event.tickets || event.tickets.length === 0" class="text-center py-4 text-xs font-bold text-muted uppercase">
-              Belum ada tiket tersedia untuk event ini.
+            <!-- Panel event berakhir di sidebar tiket -->
+            <div v-if="isPastEvent" class="bg-gray-800 text-white p-4 text-center space-y-2">
+              <div class="text-2xl">🏁</div>
+              <p class="font-black uppercase text-sm">Penjualan Tiket Ditutup</p>
+              <p class="text-xs text-gray-400">Event ini sudah selesai.</p>
             </div>
 
-            <div v-else class="space-y-3">
-              <div
-                v-for="ticket in event.tickets"
-                :key="ticket.id"
-                class="p-4 border-2 border-ink space-y-3 transition-all"
-                :class="{ 'bg-accent/20 border-accent': selectedTicket?.id === ticket.id, 'bg-white': selectedTicket?.id !== ticket.id }"
-              >
-                <div class="flex justify-between items-start">
-                  <div>
-                    <h4 class="font-black text-base uppercase">{{ ticket.nama_tiket }}</h4>
-                    <span class="text-[10px] font-black uppercase px-2 py-0.5 border border-ink" :class="ticket.stok > 0 ? 'bg-green-300' : 'bg-red-300'">
-                      Stok: {{ ticket.stok }}
-                    </span>
-                  </div>
-                  <div class="font-black text-lg text-ink">
-                    Rp {{ formatNumber(ticket.harga) }}
-                  </div>
-                </div>
-
-                <button
-                  @click="openCheckoutModal(ticket)"
-                  :disabled="ticket.stok <= 0 || checkoutLoading"
-                  class="nb-btn nb-btn-primary w-full py-2 text-xs font-black uppercase flex items-center justify-center gap-2"
-                >
-                  <i class="fa-solid fa-cart-shopping"></i>
-                  <span>{{ ticket.stok > 0 ? 'Beli Tiket Ini' : 'Tiket Habis' }}</span>
-                </button>
+            <template v-else>
+              <div v-if="!event.tickets || event.tickets.length === 0" class="text-center py-4 text-xs font-bold text-muted uppercase">
+                Belum ada tiket tersedia untuk event ini.
               </div>
-            </div>
+
+              <div v-else class="space-y-3">
+                <div
+                  v-for="ticket in event.tickets"
+                  :key="ticket.id"
+                  class="p-4 border-2 border-ink space-y-3 transition-all"
+                  :class="{ 'bg-accent/20 border-accent': selectedTicket?.id === ticket.id, 'bg-white': selectedTicket?.id !== ticket.id }"
+                >
+                  <div class="flex justify-between items-start">
+                    <div>
+                      <h4 class="font-black text-base uppercase">{{ ticket.nama_tiket }}</h4>
+                      <span class="text-[10px] font-black uppercase px-2 py-0.5 border border-ink" :class="ticket.stok > 0 ? 'bg-green-300' : 'bg-red-300'">
+                        Stok: {{ ticket.stok }}
+                      </span>
+                    </div>
+                    <div class="font-black text-lg text-ink">
+                      Rp {{ formatNumber(ticket.harga) }}
+                    </div>
+                  </div>
+
+                  <button
+                    @click="openCheckoutModal(ticket)"
+                    :disabled="ticket.stok <= 0 || checkoutLoading"
+                    class="nb-btn nb-btn-primary w-full py-2 text-xs font-black uppercase flex items-center justify-center gap-2"
+                  >
+                    <i class="fa-solid fa-cart-shopping"></i>
+                    <span>{{ ticket.stok > 0 ? 'Beli Tiket Ini' : 'Tiket Habis' }}</span>
+                  </button>
+                </div>
+              </div>
+            </template>
           </div>
         </div>
       </div>
@@ -270,6 +304,16 @@ const openCheckoutModal = (ticket) => {
 const checkoutSubtotal = computed(() => {
   if (!selectedTicketForCheckout.value) return 0
   return (Number(selectedTicketForCheckout.value.harga) || 0) * (Number(checkoutForm.value.jumlah) || 1)
+})
+
+// Cek apakah tanggal event sudah lewat
+const isPastEvent = computed(() => {
+  if (!event.value?.tanggal) return false
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const eventDate = new Date(event.value.tanggal)
+  eventDate.setHours(0, 0, 0, 0)
+  return eventDate < today
 })
 
 const processPayment = async () => {

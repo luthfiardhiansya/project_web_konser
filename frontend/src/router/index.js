@@ -15,11 +15,17 @@ import PesananView from '../views/admin/PesananView.vue'
 import PenggunaView from '../views/admin/PenggunaView.vue'
 import PembayaranView from '../views/admin/PembayaranView.vue'
 import ScanQRView from '../views/admin/ScanQRView.vue'
+import LaporanStatistikView from '../views/admin/LaporanStatistikView.vue'
 import ProfileView from '../views/ProfileView.vue'
 import WishlistView from '../views/WishlistView.vue'
 import MyTicketsView from '../views/MyTicketsView.vue'
 import ScannerView from '../views/ScannerView.vue'
+import UserPesananView from '../views/UserPesananView.vue'
 import GoogleCallbackView from '../views/GoogleCallbackView.vue'
+
+// Halaman akses ditolak
+import AccessDeniedAdminView from '../views/AccessDeniedAdminView.vue'
+import AccessDeniedScannerView from '../views/AccessDeniedScannerView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -45,6 +51,8 @@ const router = createRouter({
       name: 'register',
       component: RegisterView
     },
+
+    // ─── Admin ──────────────────────────────────────────────
     {
       path: '/admin',
       name: 'admin',
@@ -94,16 +102,32 @@ const router = createRouter({
       meta: { requiresAuth: true, requiresAdmin: true }
     },
     {
+      path: '/admin/laporan',
+      name: 'admin-laporan',
+      component: LaporanStatistikView,
+      meta: { requiresAuth: true, requiresAdmin: true }
+    },
+
+    // ─── Scanner ─────────────────────────────────────────────
+    {
+      path: '/scanner',
+      name: 'scanner',
+      component: ScannerView,
+      meta: { requiresAuth: true, requiresScanner: true }
+    },
+
+    // ─── User ────────────────────────────────────────────────
+    {
       path: '/profile',
       name: 'profile',
       component: ProfileView,
-      meta: { requiresAuth: true}
+      meta: { requiresAuth: true }
     },
     {
       path: '/wishlist',
       name: 'wishlist',
       component: WishlistView,
-      meta: {requiresAuth: true}
+      meta: { requiresAuth: true }
     },
     {
       path: '/my-tickets',
@@ -112,11 +136,27 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
     {
-      path: '/scanner',
-      name: 'scanner',
-      component: () => import('../views/ScannerView.vue'),
-      meta: {requiresAuth: true, requiresScanner: true}
+      path: '/pesanan',
+      name: 'pesanan',
+      component: UserPesananView,
+      meta: { requiresAuth: true }
     },
+
+    // ─── Akses Ditolak ───────────────────────────────────────
+    {
+      // User biasa / scanner mencoba akses /admin/*
+      path: '/akses-ditolak/admin',
+      name: 'access-denied-admin',
+      component: AccessDeniedAdminView
+    },
+    {
+      // User biasa / admin mencoba akses /scanner
+      path: '/akses-ditolak/scanner',
+      name: 'access-denied-scanner',
+      component: AccessDeniedScannerView
+    },
+
+    // ─── Google OAuth ────────────────────────────────────────
     {
       path: '/auth/google/callback',
       name: 'google-callback',
@@ -127,64 +167,39 @@ const router = createRouter({
 
 router.beforeEach((to, from, next) => {
   const token = localStorage.getItem('token')
-
   let user = null
 
   try {
     user = JSON.parse(localStorage.getItem('user'))
-  } catch (error) {
+  } catch {
     user = null
   }
 
-  // =====================================
-  // BELUM LOGIN
-  // =====================================
+  // ── Belum login ───────────────────────────────────────────
   if (to.meta.requiresAuth && !token) {
     next('/login')
     return
   }
 
-  // =====================================
-  // AKUN SCANNER
-  // Scanner selalu diarahkan ke /scanner
-  // =====================================
+  // ── Akun Scanner ──────────────────────────────────────────
+  // Scanner hanya boleh di /scanner — redirect ke sana dari mana saja
   if (user?.role === 'scanner') {
-
-    // Kalau scanner membuka Home
-    if (to.path === '/') {
-      next('/scanner')
-      return
-    }
-
-    // Kalau scanner mencoba membuka halaman lain
-    if (
-      to.path !== '/scanner' &&
-      to.path !== '/login'
-    ) {
+    const scannerAllowed = ['/scanner', '/login', '/auth/google/callback']
+    if (!scannerAllowed.includes(to.path)) {
       next('/scanner')
       return
     }
   }
 
-  // =====================================
-  // ADMIN
-  // =====================================
-  if (
-    to.meta.requiresAdmin &&
-    user?.role !== 'admin'
-  ) {
-    next('/')
+  // ── Butuh role admin ──────────────────────────────────────
+  if (to.meta.requiresAdmin && user?.role !== 'admin') {
+    next('/akses-ditolak/admin')
     return
   }
 
-  // =====================================
-  // SCANNER
-  // =====================================
-  if (
-    to.meta.requiresScanner &&
-    user?.role !== 'scanner'
-  ) {
-    next('/')
+  // ── Butuh role scanner ────────────────────────────────────
+  if (to.meta.requiresScanner && user?.role !== 'scanner') {
+    next('/akses-ditolak/scanner')
     return
   }
 

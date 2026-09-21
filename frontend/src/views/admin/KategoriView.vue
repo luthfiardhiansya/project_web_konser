@@ -3,6 +3,9 @@ import { ref, onMounted, computed, watch } from 'vue'
 import AdminLayout from '../../components/AdminLayout.vue'
 import api from '../../utils/api'
 import { showFlash } from '../../utils/flash'
+import { useExcelExport } from '../../composables/useExcelExport'
+
+const { exportExcel, exporting } = useExcelExport()
 
 const kategoris = ref([])
 const loading = ref(true)

@@ -23,6 +23,86 @@ const form = ref({
   status: 'aktif'
 })
 
+// ── Poster tab state ──────────────────────────────────────────────────────────
+// 'url' = isi URL manual | 'file' = upload foto
+const posterTab       = ref('url')
+const posterUrlInput  = ref('')       // nilai input URL
+const posterFile      = ref(null)     // File object yang dipilih
+const posterUploading = ref(false)    // sedang upload ke server
+const posterPreview   = ref('')       // URL untuk <img> preview
+
+// Reset semua state poster saat modal dibuka
+const resetPosterState = (existingUrl = '') => {
+  posterTab.value      = existingUrl ? 'url' : 'url'
+  posterUrlInput.value = existingUrl || ''
+  posterFile.value     = null
+  posterUploading.value = false
+  posterPreview.value  = existingUrl || ''
+  form.value.poster    = existingUrl || ''
+}
+
+// Saat user mengetik URL
+const onUrlInput = () => {
+  form.value.poster   = posterUrlInput.value
+  posterPreview.value = posterUrlInput.value
+}
+
+// Saat user memilih file
+const onFileChange = (e) => {
+  const file = e.target.files[0]
+  if (!file) return
+
+  const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+  if (!allowed.includes(file.type)) {
+    showFlash('Format file tidak didukung. Gunakan JPG, PNG, WebP, atau GIF.', 'error', 'FORMAT SALAH')
+    return
+  }
+  if (file.size > 5 * 1024 * 1024) {
+    showFlash('Ukuran file maksimal 5 MB.', 'error', 'FILE TERLALU BESAR')
+    return
+  }
+
+  posterFile.value    = file
+  // Local preview langsung dari FileReader
+  const reader        = new FileReader()
+  reader.onload       = (ev) => { posterPreview.value = ev.target.result }
+  reader.readAsDataURL(file)
+}
+
+// Upload file ke server dan isi form.poster dengan URL yang dikembalikan
+const uploadPosterFile = async () => {
+  if (!posterFile.value) return
+
+  posterUploading.value = true
+  try {
+    const formData = new FormData()
+    formData.append('image', posterFile.value)
+
+    const res = await api.post('/upload-image', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+
+    form.value.poster   = res.data.url
+    posterPreview.value = res.data.url
+    showFlash('Foto poster berhasil diunggah!', 'success', 'UPLOAD BERHASIL')
+  } catch (err) {
+    showFlash(err.response?.data?.message || 'Gagal mengunggah foto.', 'error', 'UPLOAD GAGAL')
+  } finally {
+    posterUploading.value = false
+  }
+}
+
+// Hapus poster yang sudah dipilih / di-upload
+const clearPoster = () => {
+  posterFile.value      = null
+  posterPreview.value   = ''
+  posterUrlInput.value  = ''
+  form.value.poster     = ''
+  // Reset input file supaya event onChange bisa terpicu lagi
+  const inp = document.getElementById('poster-file-input')
+  if (inp) inp.value = ''
+}
+
 // Search & Filter
 const searchQuery = ref('')
 const filterKategori = ref('')
@@ -39,11 +119,41 @@ const fetchEvents = async () => {
   try {
     const response = await api.get('/events')
     events.value = response.data.data || response.data || []
+
+    // Auto-update event yang tanggalnya sudah lewat ke status "selesai"
+    await autoUpdatePastEvents()
   } catch (error) {
     console.error('Gagal mengambil event:', error)
   } finally {
     loading.value = false
   }
+}
+
+// Cek dan update event yang sudah lewat tanggalnya otomatis
+const autoUpdatePastEvents = async () => {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  const eventsToPatch = events.value.filter(e => {
+    if (e.status !== 'aktif') return false
+    if (!e.tanggal) return false
+    const d = new Date(e.tanggal)
+    d.setHours(0, 0, 0, 0)
+    return d < today
+  })
+
+  if (eventsToPatch.length === 0) return
+
+  // Kirim PATCH ke backend untuk setiap event yang perlu diupdate
+  const updates = eventsToPatch.map(e =>
+    api.put(`/events/${e.id}`, { ...e, status: 'selesai' }).then(() => {
+      // Update lokal tanpa perlu re-fetch
+      const idx = events.value.findIndex(ev => ev.id === e.id)
+      if (idx !== -1) events.value[idx].status = 'selesai'
+    }).catch(() => null) // abaikan error per-item
+  )
+
+  await Promise.allSettled(updates)
 }
 
 const fetchCategories = async () => {
@@ -60,7 +170,6 @@ onMounted(() => {
   fetchCategories()
 })
 
-// Reset page saat filter berubah
 watch([searchQuery, filterKategori, filterStatus, filterTanggalDari, filterTanggalSampai], () => {
   currentPage.value = 1
 })
@@ -140,6 +249,7 @@ const openAddForm = () => {
     poster: '',
     status: 'aktif'
   }
+  resetPosterState('')
   showForm.value = true
 }
 
@@ -149,10 +259,17 @@ const openEditForm = (eventItem) => {
     ...eventItem,
     category_id: eventItem.category_id || eventItem.category?.id || ''
   }
+  resetPosterState(eventItem.poster || '')
   showForm.value = true
 }
 
 const saveEvent = async () => {
+  // Jika tab file dan ada file yang belum diupload, upload dulu
+  if (posterTab.value === 'file' && posterFile.value && !form.value.poster.startsWith('http')) {
+    await uploadPosterFile()
+    if (!form.value.poster) return // upload gagal, hentikan
+  }
+
   try {
     if (isEdit.value) {
       await api.put(`/events/${form.value.id}`, form.value)
@@ -311,6 +428,12 @@ const hapusEvent = async (id) => {
                   }">
                     {{ e.status }}
                   </span>
+                  <!-- Indikator tanggal lewat -->
+                  <span
+                    v-if="e.status === 'aktif' && e.tanggal && new Date(e.tanggal) < new Date(new Date().setHours(0,0,0,0))"
+                    class="badge badge-warning ml-1"
+                    title="Tanggal event sudah lewat"
+                  >lewat</span>
                 </td>
                 <td style="text-align: right;">
                   <div class="d-flex gap-2 justify-end">
@@ -414,11 +537,116 @@ const hapusEvent = async (id) => {
                 <label class="form-label">Lokasi / Venue</label>
                 <input type="text" v-model="form.lokasi" class="form-control" placeholder="Contoh: Gudang Selatan, Bandung" required>
               </div>
-              <div class="form-group flex-1">
-                <label class="form-label">URL Poster (Opsional)</label>
-                <input type="text" v-model="form.poster" class="form-control" placeholder="https://example.com/poster.jpg">
+            </div>
+
+            <!-- ── POSTER SECTION ──────────────────────────────────── -->
+            <div class="form-group mb-3">
+              <label class="form-label">Poster Event (Opsional)</label>
+
+              <!-- Tab Switcher -->
+              <div class="poster-tabs">
+                <button
+                  type="button"
+                  class="poster-tab"
+                  :class="{ 'poster-tab-active': posterTab === 'url' }"
+                  @click="posterTab = 'url'"
+                >
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                  </svg>
+                  URL Poster
+                </button>
+                <button
+                  type="button"
+                  class="poster-tab"
+                  :class="{ 'poster-tab-active': posterTab === 'file' }"
+                  @click="posterTab = 'file'"
+                >
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
+                    <polyline points="21 15 16 10 5 21"/>
+                  </svg>
+                  Pilih Foto
+                </button>
+              </div>
+
+              <!-- Tab: URL -->
+              <div v-if="posterTab === 'url'" class="poster-tab-body">
+                <input
+                  type="text"
+                  v-model="posterUrlInput"
+                  @input="onUrlInput"
+                  class="form-control"
+                  placeholder="https://contoh.com/poster.jpg"
+                />
+              </div>
+
+              <!-- Tab: File Upload -->
+              <div v-else class="poster-tab-body">
+                <label class="poster-drop-zone" :class="{ 'poster-drop-zone-has': posterPreview && posterTab === 'file' && !form.poster.startsWith('http') || posterFile }">
+                  <input
+                    id="poster-file-input"
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    class="sr-only"
+                    @change="onFileChange"
+                  />
+                  <template v-if="!posterFile">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="upload-icon">
+                      <polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/>
+                      <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
+                    </svg>
+                    <p class="text-sm font-semibold mt-2">Klik untuk pilih foto</p>
+                    <p class="text-xs text-muted mt-1">JPG, PNG, WebP, GIF — maks. 5 MB</p>
+                  </template>
+                  <template v-else>
+                    <p class="text-xs font-semibold text-main">{{ posterFile.name }}</p>
+                    <p class="text-xs text-muted">{{ (posterFile.size / 1024 / 1024).toFixed(2) }} MB</p>
+                    <button
+                      type="button"
+                      @click.prevent="clearPoster"
+                      class="poster-clear-btn"
+                    >Ganti Foto</button>
+                  </template>
+                </label>
+
+                <!-- Tombol Upload -->
+                <button
+                  v-if="posterFile && !form.poster.startsWith('http://localhost') && !form.poster.startsWith('https://')"
+                  type="button"
+                  @click="uploadPosterFile"
+                  :disabled="posterUploading"
+                  class="btn btn-primary btn-sm mt-2 w-full"
+                >
+                  <svg v-if="posterUploading" class="spin-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.09"/>
+                  </svg>
+                  <svg v-else width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/>
+                    <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
+                  </svg>
+                  {{ posterUploading ? 'Mengunggah...' : 'Upload Foto Sekarang' }}
+                </button>
+
+                <!-- Upload sukses indicator -->
+                <div v-if="posterFile && (form.poster.startsWith('http://localhost') || form.poster.startsWith('https://'))" class="poster-upload-success">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                  Foto berhasil diunggah
+                </div>
+              </div>
+
+              <!-- Preview Gambar (muncul di kedua tab) -->
+              <div v-if="posterPreview" class="poster-preview-wrap">
+                <img :src="posterPreview" alt="Preview poster" class="poster-preview-img" />
+                <button type="button" @click="clearPoster" class="poster-preview-remove" title="Hapus poster">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                  </svg>
+                </button>
               </div>
             </div>
+            <!-- ── END POSTER SECTION ──────────────────────────────── -->
 
             <div class="form-group mb-4">
               <label class="form-label">Deskripsi Event</label>
@@ -593,6 +821,153 @@ const hapusEvent = async (id) => {
 .page-btn:disabled {
   opacity: 0.4;
   cursor: not-allowed;
+}
+
+/* Poster Tabs */
+.poster-tabs {
+  display: flex;
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 8px 8px 0 0;
+  overflow: hidden;
+  margin-bottom: 0;
+}
+
+.poster-tab {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  background: var(--bg-subtle, #f9fafb);
+  color: var(--text-muted, #888);
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s;
+  border-bottom: 2px solid transparent;
+}
+
+.poster-tab:hover {
+  background: var(--card-bg, #fff);
+  color: var(--text-main, #222);
+}
+
+.poster-tab-active {
+  background: var(--card-bg, #fff);
+  color: var(--primary, #7c3aed);
+  border-bottom-color: var(--primary, #7c3aed);
+  font-weight: 700;
+}
+
+.poster-tab-body {
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  padding: 0.75rem;
+  background: var(--card-bg, #fff);
+}
+
+/* Drop Zone */
+.poster-drop-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  border: 2px dashed var(--border-color, #e5e7eb);
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.15s;
+  min-height: 100px;
+  color: var(--text-muted, #888);
+}
+
+.poster-drop-zone:hover,
+.poster-drop-zone-has {
+  border-color: var(--primary, #7c3aed);
+  background: #f9f5ff;
+  color: var(--primary, #7c3aed);
+}
+
+.upload-icon {
+  color: var(--text-muted, #bbb);
+}
+
+.poster-clear-btn {
+  margin-top: 0.5rem;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.75rem;
+  background: none;
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--text-muted, #888);
+}
+
+.poster-clear-btn:hover {
+  border-color: var(--danger, #ef4444);
+  color: var(--danger, #ef4444);
+}
+
+.poster-upload-success {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #16a34a;
+}
+
+/* Preview */
+.poster-preview-wrap {
+  position: relative;
+  margin-top: 0.75rem;
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 8px;
+  overflow: hidden;
+  display: inline-block;
+  max-width: 100%;
+}
+
+.poster-preview-img {
+  display: block;
+  width: 100%;
+  max-height: 180px;
+  object-fit: cover;
+}
+
+.poster-preview-remove {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.55);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  transition: background 0.15s;
+}
+
+.poster-preview-remove:hover {
+  background: #ef4444;
+}
+
+/* Spin animation untuk tombol upload */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.spin-icon {
+  animation: spin 0.8s linear infinite;
 }
 
 /* Modal */

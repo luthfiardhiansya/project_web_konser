@@ -155,31 +155,32 @@ onBeforeUnmount(() => {
 
         <!-- FAVORITES -->
         <button
-  @click="$router.push('/wishlist')"
-  class="p-2 nb-btn nb-btn-secondary flex items-center gap-1.5"
-  title="Favorit"
->
-  <svg
-    class="w-4 h-4"
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-  >
-    <path
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="2.5"
-      d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.684a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-    />
-  </svg>
+          @click="$router.push('/wishlist')"
+          data-wishlist-button
+          class="p-2 nb-btn nb-btn-secondary flex items-center gap-1.5 wishlist-nav-btn"
+          title="Favorit"
+        >
+          <svg
+            class="w-4 h-4 wishlist-heart-icon"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2.5"
+              d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.684a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+            />
+          </svg>
 
-  <span
-    v-if="favoritesCount > 0"
-    class="text-[11px] font-black leading-none"
-  >
-    {{ favoritesCount }}
-  </span>
-</button>
+          <span
+            v-if="favoritesCount > 0"
+            class="wishlist-count text-[11px] font-black leading-none"
+          >
+            {{ favoritesCount }}
+          </span>
+        </button>
 
         <!-- USER AUTH -->
         <div class="flex items-center space-x-2">
@@ -379,3 +380,43 @@ onBeforeUnmount(() => {
     </div>
   </header>
 </template>
+
+<style scoped>
+/* ── Bounce saat item baru masuk ke navbar ─────────────────────────── */
+@keyframes wishlist-bounce {
+  0%   { transform: scale(1); }
+  25%  { transform: scale(1.45) rotate(-8deg); }
+  50%  { transform: scale(0.88) rotate(5deg); }
+  70%  { transform: scale(1.18) rotate(-3deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+@keyframes count-pop {
+  0%   { transform: scale(0.5); opacity: 0; }
+  60%  { transform: scale(1.4); opacity: 1; }
+  100% { transform: scale(1);   opacity: 1; }
+}
+
+.wishlist-nav-btn {
+  position: relative;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+/* Class yang ditambahkan via JS */
+:global(.wishlist-bounce) {
+  animation: wishlist-bounce 0.45s cubic-bezier(.36,.07,.19,.97) both;
+}
+
+.wishlist-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 16px;
+  background: #111;
+  color: #FFD84D;
+  border-radius: 2px;
+  padding: 0 3px;
+  animation: count-pop 0.35s cubic-bezier(.36,.07,.19,.97) both;
+}
+</style>
