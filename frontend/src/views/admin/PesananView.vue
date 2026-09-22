@@ -3,6 +3,9 @@ import { ref, onMounted, computed, watch } from 'vue'
 import AdminLayout from '../../components/AdminLayout.vue'
 import api from '../../utils/api'
 import { showFlash } from '../../utils/flash'
+import { useExcelExport } from '../../composables/useExcelExport'
+
+const { exportExcel, exporting } = useExcelExport()
 
 const pesananList = ref([])
 const users = ref([])
@@ -150,6 +153,28 @@ const hapusPesanan = async (id) => {
   }
 }
 
+const handleExportExcel = () => {
+  exportExcel({
+    title: 'Data Pesanan Tiket',
+    filename: 'pesanan_tiket',
+    columns: ['Kode Pesanan', 'Nama Pemesan', 'Email', 'Detail Tiket', 'Total Harga (Rp)', 'Status', 'Tanggal Pesan'],
+    rows: filteredPesanan.value.map(o => {
+      const tiketStr = o.order_details && o.order_details.length
+        ? o.order_details.map(d => `${d.ticket?.event?.nama_event || 'Event'} (${d.ticket?.nama_tiket}) x${d.jumlah}`).join('; ')
+        : '-'
+      return [
+        o.kode_pesanan,
+        o.user?.name || 'User #' + o.user_id,
+        o.user?.email || '-',
+        tiketStr,
+        o.total_harga,
+        o.status,
+        o.created_at ? o.created_at.substring(0, 19).replace('T', ' ') : '-'
+      ]
+    })
+  })
+}
+
 const formatNumber = (val) => {
   return new Intl.NumberFormat('id-ID').format(Number(val) || 0)
 }
@@ -175,6 +200,9 @@ const formatDate = (dateStr) => {
           <h1 class="page-title">Manajemen Pesanan</h1>
           <p class="text-muted text-sm">Kelola transaksi dan status pemesanan tiket</p>
         </div>
+        <button @click="handleExportExcel" :disabled="exporting" class="btn btn-outline btn-sm font-semibold" style="background:#dcfce7;color:#166534;border-color:#86efac;">
+          <i class="fa-solid fa-file-excel mr-1"></i> Export Excel
+        </button>
       </div>
 
       <!-- Search & Filter Bar -->

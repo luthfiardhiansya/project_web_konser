@@ -2,6 +2,9 @@
 import { ref, onMounted, computed, watch } from 'vue'
 import AdminLayout from '../../components/AdminLayout.vue'
 import api from '../../utils/api'
+import { useExcelExport } from '../../composables/useExcelExport'
+
+const { exportExcel, exporting } = useExcelExport()
 
 const scannedList = ref([])
 const loading = ref(true)
@@ -90,6 +93,23 @@ const formatDateTime = (d) => {
     hour: '2-digit', minute: '2-digit'
   })
 }
+
+const handleExportExcel = () => {
+  exportExcel({
+    title: 'Riwayat Scan QR Tiket',
+    filename: 'riwayat_scan_qr',
+    columns: ['ID Ticket', 'Kode Pesanan', 'Nama Pemesan', 'Event', 'Jenis Tiket', 'Waktu Scan', 'Scanner'],
+    rows: filtered.value.map(t => [
+      t.id,
+      t.order?.kode_pesanan || '-',
+      t.order?.user?.name || 'Pemesan #' + t.order?.user_id,
+      t.ticket?.event?.nama_event || '-',
+      t.ticket?.nama_tiket || '-',
+      t.scanned_at ? t.scanned_at.substring(0, 19).replace('T', ' ') : '-',
+      t.scanner?.name || '-'
+    ])
+  })
+}
 </script>
 
 <template>
@@ -102,14 +122,19 @@ const formatDateTime = (d) => {
           <h1 class="page-title">Riwayat Scan QR Tiket</h1>
           <p class="text-muted text-sm">Daftar tiket yang sudah berhasil di-scan saat masuk event</p>
         </div>
-        <button @click="fetchScanned" class="btn-refresh" :disabled="loading">
-          <svg :class="{ spin: loading }" width="14" height="14" viewBox="0 0 24 24"
-            fill="none" stroke="currentColor" stroke-width="2.5">
-            <polyline points="1 4 1 10 7 10"></polyline>
-            <path d="M3.51 15a9 9 0 1 0 .49-3.09"></path>
-          </svg>
-          Refresh
-        </button>
+        <div class="d-flex gap-2 align-center">
+          <button @click="handleExportExcel" :disabled="exporting" class="btn btn-outline btn-sm font-semibold" style="background:#dcfce7;color:#166534;border-color:#86efac;">
+            <i class="fa-solid fa-file-excel mr-1"></i> Export Excel
+          </button>
+          <button @click="fetchScanned" class="btn-refresh" :disabled="loading">
+            <svg :class="{ spin: loading }" width="14" height="14" viewBox="0 0 24 24"
+              fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="1 4 1 10 7 10"></polyline>
+              <path d="M3.51 15a9 9 0 1 0 .49-3.09"></path>
+            </svg>
+            Refresh
+          </button>
+        </div>
       </div>
 
       <!-- Filter Bar -->

@@ -3,6 +3,9 @@ import { ref, onMounted, computed, watch } from 'vue'
 import AdminLayout from '../../components/AdminLayout.vue'
 import api from '../../utils/api'
 import { showFlash } from '../../utils/flash'
+import { useExcelExport } from '../../composables/useExcelExport'
+
+const { exportExcel, exporting } = useExcelExport()
 
 const tickets = ref([])
 const events = ref([])
@@ -152,6 +155,21 @@ const hapusTicket = async (id) => {
   }
 }
 
+const handleExportExcel = () => {
+  exportExcel({
+    title: 'Data Tiket Event',
+    filename: 'tiket_event',
+    columns: ['ID Tiket', 'Nama Event', 'Jenis Tiket', 'Harga (Rp)', 'Stok Sisa'],
+    rows: filteredTickets.value.map(t => [
+      t.id,
+      t.event?.nama_event || 'Event #' + t.event_id,
+      t.nama_tiket,
+      t.harga,
+      t.stok
+    ])
+  })
+}
+
 const formatNumber = (val) => {
   return new Intl.NumberFormat('id-ID').format(Number(val) || 0)
 }
@@ -165,13 +183,18 @@ const formatNumber = (val) => {
           <h1 class="page-title">Manajemen Tiket</h1>
           <p class="text-muted text-sm">Kelola kategori tiket, harga, dan stok event</p>
         </div>
-        <button @click="openAddForm" class="btn btn-primary">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="12" y1="5" x2="12" y2="19"></line>
-            <line x1="5" y1="12" x2="19" y2="12"></line>
-          </svg>
-          Tambah Tiket
-        </button>
+        <div class="d-flex gap-2">
+          <button @click="handleExportExcel" :disabled="exporting" class="btn btn-outline btn-sm font-semibold" style="background:#dcfce7;color:#166534;border-color:#86efac;">
+            <i class="fa-solid fa-file-excel mr-1"></i> Export Excel
+          </button>
+          <button @click="openAddForm" class="btn btn-primary">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            Tambah Tiket
+          </button>
+        </div>
       </div>
 
       <!-- Search & Filter Bar -->

@@ -3,6 +3,9 @@ import { ref, onMounted, computed, watch } from 'vue'
 import AdminLayout from '../../components/AdminLayout.vue'
 import api from '../../utils/api'
 import { showFlash } from '../../utils/flash'
+import { useExcelExport } from '../../composables/useExcelExport'
+
+const { exportExcel, exporting } = useExcelExport()
 
 const events = ref([])
 const categories = ref([])
@@ -296,6 +299,24 @@ const hapusEvent = async (id) => {
     }
   }
 }
+
+const handleExportExcel = () => {
+  exportExcel({
+    title: 'Data Event Musik',
+    filename: 'event_musik',
+    columns: ['ID Event', 'Nama Event', 'Kategori', 'Tanggal', 'Waktu', 'Lokasi', 'Alamat', 'Status'],
+    rows: filteredEvents.value.map(e => [
+      e.id,
+      e.nama_event,
+      e.category?.nama_kategori || 'General',
+      e.tanggal,
+      e.waktu,
+      e.lokasi,
+      e.alamat || '-',
+      e.status
+    ])
+  })
+}
 </script>
 
 <template>
@@ -306,13 +327,18 @@ const hapusEvent = async (id) => {
           <h1 class="page-title">Manajemen Event</h1>
           <p class="text-muted text-sm">Kelola daftar konser, festival, dan gigs musik</p>
         </div>
-        <button @click="openAddForm" class="btn btn-primary">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="12" y1="5" x2="12" y2="19"></line>
-            <line x1="5" y1="12" x2="19" y2="12"></line>
-          </svg>
-          Tambah Event
-        </button>
+        <div class="d-flex gap-2">
+          <button @click="handleExportExcel" :disabled="exporting" class="btn btn-outline btn-sm font-semibold" style="background:#dcfce7;color:#166534;border-color:#86efac;">
+            <i class="fa-solid fa-file-excel mr-1"></i> Export Excel
+          </button>
+          <button @click="openAddForm" class="btn btn-primary">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            Tambah Event
+          </button>
+        </div>
       </div>
 
       <!-- Search & Filter Bar -->

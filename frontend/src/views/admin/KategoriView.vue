@@ -108,6 +108,19 @@ const hapusKategori = async (id) => {
     }
   }
 }
+
+const handleExportExcel = () => {
+  exportExcel({
+    title: 'Data Kategori Event',
+    filename: 'kategori_event',
+    columns: ['ID Kategori', 'Nama Kategori', 'Deskripsi'],
+    rows: filteredKategoris.value.map(k => [
+      k.id,
+      k.nama_kategori,
+      k.deskripsi || '-'
+    ])
+  })
+}
 </script>
 
 <template>
@@ -118,13 +131,18 @@ const hapusKategori = async (id) => {
           <h1 class="page-title">Manajemen Kategori</h1>
           <p class="text-muted text-sm">Kelola pengelompokan jenis event musik</p>
         </div>
-        <button @click="openAddForm" class="btn btn-primary">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="12" y1="5" x2="12" y2="19"></line>
-            <line x1="5" y1="12" x2="19" y2="12"></line>
-          </svg>
-          Tambah Kategori
-        </button>
+        <div class="d-flex gap-2">
+          <button @click="handleExportExcel" :disabled="exporting" class="btn btn-outline btn-sm font-semibold" style="background:#dcfce7;color:#166534;border-color:#86efac;">
+            <i class="fa-solid fa-file-excel mr-1"></i> Export Excel
+          </button>
+          <button @click="openAddForm" class="btn btn-primary">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            Tambah Kategori
+          </button>
+        </div>
       </div>
 
       <!-- Search & Filter Bar -->

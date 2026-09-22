@@ -17,6 +17,7 @@ const TABS = [
 
 // ─── Loading ──────────────────────────────────────────────────────────────────
 const loading = ref(false)
+const exporting = ref(false)
 
 // ─── Filter penjualan ─────────────────────────────────────────────────────────
 const filterPenjualan = ref({ date_from: '', date_to: '', event_id: '', status: '' })
@@ -54,10 +55,12 @@ const fetchStatistik = async () => {
   try {
     const res = await api.get('/reports/statistik')
     statistik.value = res.data.data
+  } catch { showFlash('Gagal memuat statistik.', 'error', 'ERROR') }
+  finally {
+    loading.value = false
     await nextTick()
     drawCharts()
-  } catch { showFlash('Gagal memuat statistik.', 'error', 'ERROR') }
-  finally { loading.value = false }
+  }
 }
 
 const fetchPenjualan = async () => {
@@ -93,10 +96,12 @@ const fetchScan = async () => {
     const res = await api.get('/reports/scan', { params: filterScan.value })
     laporanScan.value  = res.data.data  || []
     scanStats.value    = res.data.stats || {}
+  } catch { showFlash('Gagal memuat laporan scan.', 'error', 'ERROR') }
+  finally {
+    loading.value = false
     await nextTick()
     drawScanEventChart()
-  } catch { showFlash('Gagal memuat laporan scan.', 'error', 'ERROR') }
-  finally { loading.value = false }
+  }
 }
 
 const fetchPengguna = async () => {
@@ -129,20 +134,41 @@ onMounted(async () => {
 })
 
 // ─── Export helpers ───────────────────────────────────────────────────────────
-const BASE = api.defaults.baseURL
+const doExport = async (type, fmt) => {
+  if (exporting.value) return
+  exporting.value = true
+  try {
+    const params = type === 'penjualan' ? filterPenjualan.value
+                 : type === 'scan'      ? filterScan.value
+                 : {}
 
-const exportUrl = (type, fmt, params = {}) => {
-  const token = localStorage.getItem('token') || ''
-  const q = new URLSearchParams({ ...params, _token: token }).toString()
-  if (fmt === 'pdf')   return `${BASE}/reports/export/pdf/${type}?${q}`
-  if (fmt === 'excel') return `${BASE}/reports/export/excel/${type}?${q}`
-}
+    const res = await api.get(`/reports/export/${fmt}/${type}`, {
+      params,
+      responseType: 'blob',
+    })
 
-const doExport = (type, fmt) => {
-  const params = type === 'penjualan' ? filterPenjualan.value
-               : type === 'scan'      ? filterScan.value
-               : {}
-  window.open(exportUrl(type, fmt, params), '_blank')
+    const mime = fmt === 'pdf'
+      ? 'application/pdf'
+      : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    const ext  = fmt === 'pdf' ? 'pdf' : 'xlsx'
+
+    const blob = new Blob([res.data], { type: mime })
+    const url  = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href     = url
+    link.download = `laporan_${type}_${new Date().toISOString().slice(0, 10)}.${ext}`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+
+    showFlash(`Export ${fmt.toUpperCase()} berhasil!`, 'success', 'EXPORT BERHASIL')
+  } catch (err) {
+    console.error('Export gagal:', err)
+    showFlash('Gagal mengekspor laporan.', 'error', 'EXPORT GAGAL')
+  } finally {
+    exporting.value = false
+  }
 }
 
 // ─── Canvas drawing ───────────────────────────────────────────────────────────
@@ -332,6 +358,17 @@ function drawScanEventChart() {
            TAB 1: STATISTIK
       ══════════════════════════════════════════════════════════ -->
       <template v-if="!loading && activeTab === 'statistik' && statistik">
+        <div class="export-header card mb-3">
+          <span class="text-muted text-sm font-semibold">Ringkasan Statistik Dashboard</span>
+          <div class="export-btns">
+            <button @click="doExport('statistik','excel')" :disabled="exporting" class="btn-export excel">
+              <i class="fa-solid fa-file-excel"></i> Excel
+            </button>
+            <button @click="doExport('statistik','pdf')" :disabled="exporting" class="btn-export pdf">
+              <i class="fa-solid fa-file-pdf"></i> PDF
+            </button>
+          </div>
+        </div>
 
         <!-- Stat Cards -->
         <div class="stats-grid mb-4">

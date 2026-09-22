@@ -129,6 +129,45 @@
         </button>
 
       </form>
+      <!-- GOOGLE REGISTER -->
+<div class="google-register">
+
+  <div class="divider">
+    <span>atau</span>
+  </div>
+
+  <button
+    type="button"
+    class="google-button"
+    @click="registerWithGoogle"
+  >
+    <svg
+      class="google-icon"
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
+      <path
+        fill="#4285F4"
+        d="M21.35 12.27c0-.79-.07-1.55-.23-2.27H12v4.3h5.24a4.48 4.48 0 0 1-1.94 2.94v2.45h3.14c1.84-1.7 2.91-4.21 2.91-7.42Z"
+      />
+      <path
+        fill="#34A853"
+        d="M12 21.99c2.63 0 4.84-.87 6.45-2.35l-3.14-2.45c-.87.58-1.98.92-3.31.92-2.54 0-4.69-1.72-5.46-4.03H3.3v2.53A9.75 9.75 0 0 0 12 21.99Z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M6.54 14.08A5.86 5.86 0 0 1 6.23 12c0-.72.12-1.42.31-2.08V7.39H3.3A9.97 9.97 0 0 0 2.25 12c0 1.66.4 3.23 1.05 4.61l3.24-2.53Z"
+      />
+      <path
+        fill="#EA4335"
+        d="M12 5.89c1.43 0 2.71.49 3.72 1.45l2.79-2.79C16.84 2.91 14.63 2 12 2a9.75 9.75 0 0 0-8.7 5.39l3.24 2.53C7.31 7.61 9.46 5.89 12 5.89Z"
+      />
+    </svg>
+
+    <span>Daftar dengan Google</span>
+  </button>
+
+</div>
 
 
       <!-- LOGIN -->
@@ -179,6 +218,11 @@ export default {
 
 
   methods: {
+
+    registerWithGoogle() {
+  window.location.href =
+  'http://localhost:8000/api/auth/google'
+},
 
     /*
     | FLASH
@@ -410,6 +454,63 @@ export default {
 
 
 <style scoped>
+
+.google-register {
+  margin-top: 18px;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 18px 0;
+  color: #999;
+  font-size: 12px;
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #ddd;
+}
+
+.google-button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+
+  padding: 12px;
+
+  background: white;
+  color: #111;
+
+  border: 1px solid #ccc;
+  border-radius: 6px;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.google-button:hover {
+  background: #f7f7f7;
+  border-color: #999;
+}
+
+.google-icon {
+  width: 19px;
+  height: 19px;
+  flex-shrink: 0;
+}
 
 .register-page {
   min-height: 100vh;

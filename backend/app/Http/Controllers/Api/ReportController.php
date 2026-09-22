@@ -268,13 +268,20 @@ class ReportController extends Controller
         $data  = $this->getDataForType($type, $request);
         $title = $this->titleForType($type);
 
-        $pdf = Pdf::loadView('reports.' . $type, [
+        $viewData = [
             'data'       => $data['rows'],
             'title'      => $title,
             'stats'      => $data['stats'] ?? [],
             'generated'  => now()->format('d/m/Y H:i'),
             'columns'    => $data['columns'],
-        ])->setPaper('a4', 'landscape');
+        ];
+
+        if ($type === 'statistik') {
+            $viewData['grafikBulanan'] = $data['grafikBulanan'] ?? [];
+            $viewData['grafikHarian']  = $data['grafikHarian'] ?? [];
+        }
+
+        $pdf = Pdf::loadView('reports.' . $type, $viewData)->setPaper('a4', 'landscape');
 
         return $pdf->download("laporan_{$type}_" . now()->format('Ymd_His') . '.pdf');
     }
@@ -285,12 +292,20 @@ class ReportController extends Controller
      ───────────────────────────────────────────────────────────────────── */
     public function exportExcel(Request $request, string $type)
     {
-        $data     = $this->getDataForType($type, $request);
-        $title    = $this->titleForType($type);
-        $columns  = $data['columns'];
-        $rows     = $data['rows'];
+        $data  = $this->getDataForType($type, $request);
+        $title = $this->titleForType($type);
 
-        $spreadsheet = $this->buildSpreadsheet($title, $columns, $rows);
+        if ($type === 'statistik') {
+            $spreadsheet = $this->buildStatistikSpreadsheet(
+                $data['stats'] ?? [],
+                $data['grafikBulanan'] ?? [],
+                $data['grafikHarian'] ?? []
+            );
+        } else {
+            $columns = $data['columns'];
+            $rows    = $data['rows'];
+            $spreadsheet = $this->buildSpreadsheet($title, $columns, $rows);
+        }
 
         $filename = "laporan_{$type}_" . now()->format('Ymd_His') . '.xlsx';
         return $this->streamXlsx($spreadsheet, $filename);
@@ -325,6 +340,20 @@ class ReportController extends Controller
     private function getDataForType(string $type, Request $request): array
     {
         return match ($type) {
+            'statistik' => (function () {
+                $statData = $this->statistik()->getData(true)['data'];
+                return [
+                    'rows'          => array_map(fn($b) => [
+                        'Bulan'            => $b['label'],
+                        'Jumlah Pesanan'   => $b['pesanan'],
+                        'Total Pendapatan' => 'Rp ' . number_format($b['pendapatan'], 0, ',', '.'),
+                    ], $statData['grafikBulanan'] ?? []),
+                    'stats'         => $statData,
+                    'grafikBulanan' => $statData['grafikBulanan'] ?? [],
+                    'grafikHarian'  => $statData['grafikHarian'] ?? [],
+                    'columns'       => ['Bulan', 'Jumlah Pesanan', 'Total Pendapatan'],
+                ];
+            })(),
             'penjualan' => [
                 'rows'    => $this->penjualan($request)->getData(true)['data'],
                 'stats'   => [],
@@ -357,6 +386,7 @@ class ReportController extends Controller
     private function titleForType(string $type): string
     {
         return match ($type) {
+            'statistik' => 'Dashboard Statistik',
             'penjualan' => 'Laporan Penjualan',
             'event'     => 'Laporan Event',
             'tiket'     => 'Laporan Tiket',
@@ -364,6 +394,110 @@ class ReportController extends Controller
             'pengguna'  => 'Laporan Pengguna',
             default     => 'Laporan',
         };
+    }
+
+    private function buildStatistikSpreadsheet(array $stats, array $grafikBulanan, array $grafikHarian): Spreadsheet
+    {
+        $spreadsheet = new Spreadsheet();
+        $sheet       = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Dashboard Statistik');
+
+        // Title Header
+        $sheet->mergeCells("A1:F1");
+        $sheet->setCellValue('A1', 'LAPORAN DASHBOARD STATISTIK');
+        $sheet->getStyle('A1')->applyFromArray([
+            'font'      => ['bold' => true, 'size' => 14, 'color' => ['rgb' => 'FFFFFF']],
+            'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '7C3AED']],
+            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
+        ]);
+        $sheet->getRowDimension(1)->setRowHeight(28);
+
+        // Sub-header
+        $sheet->mergeCells("A2:F2");
+        $sheet->setCellValue('A2', 'Dicetak: ' . now()->format('d/m/Y H:i'));
+        $sheet->getStyle('A2')->applyFromArray([
+            'font'      => ['italic' => true, 'size' => 9, 'color' => ['rgb' => '6B7280']],
+            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
+        ]);
+
+        // Section 1: Ringkasan Utama
+        $sheet->mergeCells("A4:F4");
+        $sheet->setCellValue('A4', 'RINGKASAN UTAMA');
+        $sheet->getStyle('A4')->applyFromArray([
+            'font' => ['bold' => true, 'color' => ['rgb' => '5B21B6']],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'F5F3FF']],
+        ]);
+
+        $kpis = [
+            ['Total Pendapatan', 'Rp ' . number_format($stats['totalPendapatan'] ?? 0, 0, ',', '.'), 'Total Pengguna', number_format($stats['totalPengguna'] ?? 0, 0, ',', '.')],
+            ['Total Pesanan', number_format($stats['totalPesanan'] ?? 0, 0, ',', '.'), 'Total Event', number_format($stats['totalEvent'] ?? 0, 0, ',', '.')],
+            ['Tiket Terjual', number_format($stats['totalTiketTerjual'] ?? 0, 0, ',', '.'), 'Tiket Terpakai', number_format($stats['tiketTerpakai'] ?? 0, 0, ',', '.')],
+            ['Tiket Belum Digunakan', number_format($stats['tiketBelum'] ?? 0, 0, ',', '.'), 'Pesanan Pending', number_format($stats['pesananPending'] ?? 0, 0, ',', '.')],
+            ['Pesanan Dibayar', number_format($stats['pesananDibayar'] ?? 0, 0, ',', '.'), '', ''],
+        ];
+
+        $rowNum = 5;
+        foreach ($kpis as $kpi) {
+            $sheet->setCellValue("A{$rowNum}", $kpi[0]);
+            $sheet->setCellValue("B{$rowNum}", $kpi[1]);
+            $sheet->setCellValue("D{$rowNum}", $kpi[2]);
+            $sheet->setCellValue("E{$rowNum}", $kpi[3]);
+            $sheet->getStyle("A{$rowNum}")->getFont()->setBold(true);
+            $sheet->getStyle("D{$rowNum}")->getFont()->setBold(true);
+            $rowNum++;
+        }
+
+        $rowNum += 2;
+        // Section 2: Penjualan Bulanan
+        $sheet->mergeCells("A{$rowNum}:C{$rowNum}");
+        $sheet->setCellValue("A{$rowNum}", 'PENJUALAN BULANAN (12 BULAN)');
+        $sheet->getStyle("A{$rowNum}")->applyFromArray([
+            'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '5B21B6']],
+        ]);
+        $rowNum++;
+
+        $sheet->setCellValue("A{$rowNum}", 'Bulan');
+        $sheet->setCellValue("B{$rowNum}", 'Pesanan');
+        $sheet->setCellValue("C{$rowNum}", 'Pendapatan');
+        $sheet->getStyle("A{$rowNum}:C{$rowNum}")->getFont()->setBold(true);
+        $rowNum++;
+
+        foreach ($grafikBulanan as $b) {
+            $sheet->setCellValue("A{$rowNum}", $b['label']);
+            $sheet->setCellValue("B{$rowNum}", $b['pesanan']);
+            $sheet->setCellValue("C{$rowNum}", 'Rp ' . number_format($b['pendapatan'], 0, ',', '.'));
+            $rowNum++;
+        }
+
+        $rowNum += 2;
+        // Section 3: Pesanan Harian
+        $sheet->mergeCells("A{$rowNum}:C{$rowNum}");
+        $sheet->setCellValue("A{$rowNum}", 'PESANAN HARIAN (30 HARI TERAKHIR)');
+        $sheet->getStyle("A{$rowNum}")->applyFromArray([
+            'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '5B21B6']],
+        ]);
+        $rowNum++;
+
+        $sheet->setCellValue("A{$rowNum}", 'Tanggal');
+        $sheet->setCellValue("B{$rowNum}", 'Pesanan');
+        $sheet->setCellValue("C{$rowNum}", 'Pendapatan');
+        $sheet->getStyle("A{$rowNum}:C{$rowNum}")->getFont()->setBold(true);
+        $rowNum++;
+
+        foreach ($grafikHarian as $h) {
+            $sheet->setCellValue("A{$rowNum}", $h['label']);
+            $sheet->setCellValue("B{$rowNum}", $h['pesanan']);
+            $sheet->setCellValue("C{$rowNum}", 'Rp ' . number_format($h['pendapatan'], 0, ',', '.'));
+            $rowNum++;
+        }
+
+        foreach (range(1, 6) as $ci) {
+            $sheet->getColumnDimensionByColumn($ci)->setAutoSize(true);
+        }
+
+        return $spreadsheet;
     }
 
     private function buildSpreadsheet(string $title, array $columns, array $rows): Spreadsheet
