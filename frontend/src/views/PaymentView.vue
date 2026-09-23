@@ -29,18 +29,35 @@ const bayar = async () => {
 
     // Buka popup Midtrans
     window.snap.pay(snapToken, {
-      onSuccess: function (result) {
+      onSuccess: async function (result) {
         console.log('Pembayaran berhasil:', result)
-        showFlash('Pembayaran berhasil!', 'success', 'PEMBAYARAN BERHASIL')
+        try {
+          await api.post('/payments/finish', {
+            order_id: orderId,
+            status: 'berhasil',
+            metode_pembayaran: result.payment_type || 'Midtrans'
+          })
+          showFlash('Pembayaran berhasil!', 'success', 'PEMBAYARAN BERHASIL')
+        } catch (finishErr) {
+          console.error('Gagal memperbarui status pembayaran:', finishErr)
+          showFlash('Pembayaran berhasil, tetapi gagal memperbarui status di server.', 'warning', 'WARNING')
+        }
       },
 
-      onPending: function (result) {
+      onPending: async function (result) {
         console.log('Pembayaran pending:', result)
         showFlash('Pembayaran masih pending.', 'warning', 'PEMBAYARAN PENDING')
       },
 
-      onError: function (result) {
+      onError: async function (result) {
         console.log('Pembayaran gagal:', result)
+        try {
+          await api.post('/payments/finish', {
+            order_id: orderId,
+            status: 'gagal',
+            metode_pembayaran: result?.payment_type || 'Midtrans'
+          })
+        } catch (e) {}
         showFlash('Pembayaran gagal.', 'error', 'PEMBAYARAN GAGAL')
       },
 

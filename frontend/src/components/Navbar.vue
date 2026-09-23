@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '../utils/api'
 
@@ -8,23 +8,34 @@ const props = defineProps({
     type: String,
     default: 'view-home'
   },
+
   favoritesCount: {
     type: Number,
     default: 0
   }
 })
 
-const emit = defineEmits(['navigate', 'open-search', 'filter-category'])
+const emit = defineEmits([
+  'navigate',
+  'open-search',
+  'filter-category'
+])
 
 const router = useRouter()
+
 const isMobileMenuOpen = ref(false)
 const isProfileMenuOpen = ref(false)
 const isLoggedIn = ref(!!localStorage.getItem('token'))
 const currentUser = ref(null)
 
+/* =========================================================
+   LOAD USER
+========================================================= */
+
 const loadUser = () => {
   const token = localStorage.getItem('token')
   const savedUser = localStorage.getItem('user')
+
   isLoggedIn.value = !!token
 
   if (!savedUser) {
@@ -40,20 +51,101 @@ const loadUser = () => {
   }
 }
 
+/* =========================================================
+   CLOSE PROFILE MENU
+========================================================= */
+
 const handleDocumentClick = () => {
   isProfileMenuOpen.value = false
 }
 
+/* =========================================================
+   NAVIGATION
+========================================================= */
+
 const onNavClick = (viewName) => {
   isMobileMenuOpen.value = false
   isProfileMenuOpen.value = false
+
   emit('navigate', viewName)
 }
 
+/* =========================================================
+   TENTANG KAMI
+========================================================= */
+
+const goToAbout = () => {
+  isMobileMenuOpen.value = false
+  isProfileMenuOpen.value = false
+
+  const aboutSection = document.getElementById('tentang-kami')
+
+  if (aboutSection) {
+    aboutSection.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start'
+    })
+  } else {
+    emit('navigate', 'view-home')
+
+    setTimeout(() => {
+      const section = document.getElementById('tentang-kami')
+
+      if (section) {
+        section.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start'
+        })
+      }
+    }, 150)
+  }
+}
+
+/* =========================================================
+   LOKASI VENUE
+========================================================= */
+
+const goToVenue = () => {
+  isMobileMenuOpen.value = false
+  isProfileMenuOpen.value = false
+
+  const venueSection = document.getElementById('lokasi-venue')
+
+  if (venueSection) {
+    venueSection.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start'
+    })
+  } else {
+    emit('navigate', 'view-home')
+
+    setTimeout(() => {
+      const section = document.getElementById('lokasi-venue')
+
+      if (section) {
+        section.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start'
+        })
+      }
+    }, 150)
+  }
+}
+
+/* =========================================================
+   FILTER CATEGORY
+========================================================= */
+
 const onFilterCat = (catName) => {
   isMobileMenuOpen.value = false
+  isProfileMenuOpen.value = false
+
   emit('filter-category', catName)
 }
+
+/* =========================================================
+   LOGOUT
+========================================================= */
 
 const logout = async () => {
   try {
@@ -66,6 +158,7 @@ const logout = async () => {
 
     isLoggedIn.value = false
     currentUser.value = null
+
     isProfileMenuOpen.value = false
     isMobileMenuOpen.value = false
 
@@ -73,106 +166,186 @@ const logout = async () => {
   }
 }
 
+/* =========================================================
+   MOUNT
+========================================================= */
+
 onMounted(() => {
   loadUser()
-  document.addEventListener('click', handleDocumentClick)
+
+  document.addEventListener(
+    'click',
+    handleDocumentClick
+  )
 })
 
+/* =========================================================
+   UNMOUNT
+========================================================= */
+
 onBeforeUnmount(() => {
-  document.removeEventListener('click', handleDocumentClick)
+  document.removeEventListener(
+    'click',
+    handleDocumentClick
+  )
 })
 </script>
 
 <template>
-  <header class="sticky top-0 z-40 bg-white nb-border-b">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
 
-      <!-- LOGO -->
+  <!-- =====================================================
+       NAVBAR
+  ====================================================== -->
+
+  <header
+    class="sticky top-0 z-40 bg-white nb-border-b"
+  >
+
+    <div
+      class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between"
+    >
+
+      <!-- =================================================
+           LOGO
+      ================================================== -->
+
       <button
         @click="onNavClick('view-home')"
         class="flex items-center space-x-2 group text-left"
       >
-          <span class="font-heading font-black text-xl sm:text-2xl tracking-tight text-brandBlack">
-                    INFO<span class="bg-brandYellow px-1 border border-brandBlack shadow-[2px_2px_0px_#121212]">MUSIK</span>BDG
-                </span>
+
+        <span
+          class="font-heading font-black text-xl sm:text-2xl tracking-tight text-brandBlack"
+        >
+          INFO<span
+            class="bg-brandYellow px-1 border border-brandBlack shadow-[2px_2px_0px_#121212]"
+          >
+            MUSIK
+          </span>BDG
+        </span>
+
       </button>
 
-      <!-- DESKTOP NAV LINKS -->
-      <nav class="hidden md:flex items-center space-x-6 text-sm font-bold uppercase tracking-tight">
+
+      <!-- =================================================
+           DESKTOP NAV
+      ================================================== -->
+
+      <nav
+        class="hidden md:flex items-center space-x-6 text-sm font-bold uppercase tracking-tight"
+      >
+
+        <!-- BERANDA -->
+
         <button
           @click="onNavClick('view-home')"
-          :class="{ 'bg-accent border-ink': currentView === 'view-home' }"
+          :class="{
+            'bg-accent border-ink':
+              currentView === 'view-home'
+          }"
           class="hover:bg-accent px-2 py-1 transition-colors border-b-2 border-transparent hover:border-ink"
         >
           Beranda
         </button>
 
+
+        <!-- KATEGORI -->
+
         <button
           @click="onNavClick('view-events')"
-          :class="{ 'bg-accent border-ink': currentView === 'view-events' }"
+          :class="{
+            'bg-accent border-ink':
+              currentView === 'view-events'
+          }"
           class="hover:bg-accent px-2 py-1 transition-colors border-b-2 border-transparent hover:border-ink"
         >
-          Event
+          Kategori
         </button>
 
-        <button
-          @click="onFilterCat('Indie')"
-          class="hover:bg-accent px-2 py-1 transition-colors border-b-2 border-transparent hover:border-ink"
-        >
-          Gigs
-        </button>
+
+        <!-- LOKASI VENUE -->
 
         <button
-          @click="onNavClick('view-community')"
-          :class="{ 'bg-accent border-ink': currentView === 'view-community' }"
+          @click="goToVenue"
           class="hover:bg-accent px-2 py-1 transition-colors border-b-2 border-transparent hover:border-ink"
         >
-          Komunitas
+          Lokasi Venue
         </button>
 
+
+        <!-- TENTANG KAMI -->
+
         <button
-          @click="onNavClick('view-organizer-reg')"
-          :class="{ 'bg-accent border-ink': currentView === 'view-organizer-reg' }"
+          @click="goToAbout"
           class="hover:bg-accent px-2 py-1 transition-colors border-b-2 border-transparent hover:border-ink"
         >
-          Organizer
+          Tentang Kami
         </button>
+
       </nav>
 
-      <!-- RIGHT NAV ACTIONS -->
-      <div class="hidden md:flex items-center space-x-3">
+
+      <!-- =================================================
+           RIGHT SIDE
+      ================================================== -->
+
+      <div
+        class="hidden md:flex items-center space-x-3"
+      >
 
         <!-- SEARCH -->
+
         <button
           @click="emit('open-search')"
           class="p-2 nb-btn nb-btn-secondary"
           title="Cari Event"
         >
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+
+          <svg
+            class="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2.5"
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+            />
+
           </svg>
+
         </button>
 
-        <!-- FAVORITES -->
+
+        <!-- WISHLIST -->
+
         <button
           @click="$router.push('/wishlist')"
           data-wishlist-button
           class="p-2 nb-btn nb-btn-secondary flex items-center gap-1.5 wishlist-nav-btn"
           title="Favorit"
         >
+
           <svg
             class="w-4 h-4 wishlist-heart-icon"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
           >
+
             <path
+              stroke="currentColor"
               stroke-linecap="round"
               stroke-linejoin="round"
               stroke-width="2.5"
               d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.684a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
             />
+
           </svg>
+
 
           <span
             v-if="favoritesCount > 0"
@@ -180,243 +353,619 @@ onBeforeUnmount(() => {
           >
             {{ favoritesCount }}
           </span>
+
         </button>
 
-        <!-- USER AUTH -->
-        <div class="flex items-center space-x-2">
+
+        <!-- =================================================
+             AUTH
+        ================================================== -->
+
+        <div
+          class="flex items-center space-x-2"
+        >
+
           <!-- BELUM LOGIN -->
+
           <template v-if="!isLoggedIn">
+
             <button
               @click="$router.push('/login')"
               class="px-3 py-1.5 text-xs uppercase nb-btn nb-btn-secondary"
             >
               Masuk
             </button>
+
+
             <button
               @click="$router.push('/register')"
               class="px-3 py-1.5 text-xs uppercase nb-btn nb-btn-primary"
             >
               Daftar
             </button>
+
           </template>
 
+
           <!-- SUDAH LOGIN -->
+
           <template v-else>
+
             <div class="relative">
+
+              <!-- USER BUTTON -->
+
               <button
                 type="button"
-                @click.stop="isProfileMenuOpen = !isProfileMenuOpen"
+                @click.stop="
+                  isProfileMenuOpen =
+                    !isProfileMenuOpen
+                "
                 class="flex items-center gap-2 px-3 py-1.5 nb-btn nb-btn-secondary"
               >
-                <div class="w-7 h-7 bg-accent border-2 border-ink flex items-center justify-center font-black">
-                  <i class="fa-solid fa-user text-xs"></i>
+
+                <div
+                  class="w-7 h-7 bg-accent border-2 border-ink flex items-center justify-center font-black"
+                >
+                  <i
+                    class="fa-solid fa-user text-xs"
+                  ></i>
                 </div>
-                <span class="text-xs uppercase font-black max-w-[120px] truncate">
+
+
+                <span
+                  class="text-xs uppercase font-black max-w-[120px] truncate"
+                >
                   {{ currentUser?.name || 'USER' }}
                 </span>
+
+
                 <i
                   class="fa-solid fa-chevron-down text-[10px] transition-transform"
-                  :class="{ 'rotate-180': isProfileMenuOpen }"
+                  :class="{
+                    'rotate-180':
+                      isProfileMenuOpen
+                  }"
                 ></i>
+
               </button>
 
+
               <!-- PROFILE DROPDOWN -->
+
               <div
                 v-if="isProfileMenuOpen"
                 class="absolute right-0 top-full mt-2 w-56 bg-white border-2 border-ink shadow-[6px_6px_0px_#000] z-[100]"
+                @click.stop
               >
-                <div class="px-4 py-3 border-b-2 border-ink">
-                  <p class="font-black text-sm uppercase">
+
+                <!-- USER INFO -->
+
+                <div
+                  class="px-4 py-3 border-b-2 border-ink"
+                >
+
+                  <p
+                    class="font-black text-sm uppercase"
+                  >
                     {{ currentUser?.name || 'USER' }}
                   </p>
-                  <p class="text-xs font-medium truncate mt-1">
+
+                  <p
+                    class="text-xs font-medium truncate mt-1"
+                  >
                     {{ currentUser?.email || '' }}
                   </p>
+
                   <span
                     v-if="currentUser?.role"
                     class="inline-block mt-2 px-2 py-1 text-[10px] font-black uppercase bg-accent border border-ink"
                   >
                     {{ currentUser.role }}
                   </span>
+
                 </div>
 
-                <!-- MY PROFILE -->
-                <button
-                  type="button"
-                  @click="$router.push('/profile')"
-                  class="w-full px-4 py-3 text-left text-xs font-black uppercase hover:bg-accent border-b border-ink flex items-center gap-3 transition-colors"
-                >
-                  <i class="fa-solid fa-user w-4"></i>
-                  <span>My Profile</span>
-              </button>
+
+                <!-- PROFILE -->
 
                 <button
                   type="button"
-                    @click="$router.push('/my-tickets')"
+                  @click="
+                    $router.push('/profile');
+                    isProfileMenuOpen = false
+                  "
                   class="w-full px-4 py-3 text-left text-xs font-black uppercase hover:bg-accent border-b border-ink flex items-center gap-3 transition-colors"
                 >
-                  <i class="fa-solid fa-ticket w-4"></i>
-                  <span>My Ticket</span>
-              </button>
 
-                <!-- PESANAN SAYA -->
-                <button
-                  type="button"
-                  @click="onNavClick('view-pesanan')"
-                  class="w-full px-4 py-3 text-left text-xs font-black uppercase hover:bg-accent border-b border-ink flex items-center gap-3 transition-colors"
-                >
-                  <i class="fa-solid fa-cart-shopping w-4"></i>
-                  <span>Pesanan Saya</span>
+                  <i
+                    class="fa-solid fa-user w-4"
+                  ></i>
+
+                  <span>
+                    Profile
+                  </span>
+
                 </button>
 
-                <!-- HALAMAN ADMIN -->
+
+                <!-- MY TICKET -->
+
+                <button
+                  type="button"
+                  @click="
+                    $router.push('/my-tickets');
+                    isProfileMenuOpen = false
+                  "
+                  class="w-full px-4 py-3 text-left text-xs font-black uppercase hover:bg-accent border-b border-ink flex items-center gap-3 transition-colors"
+                >
+
+                  <i
+                    class="fa-solid fa-ticket w-4"
+                  ></i>
+
+                  <span>
+                    Ticket Saya
+                  </span>
+
+                </button>
+
+
+                <!-- PESANAN -->
+
+                <button
+                  type="button"
+                  @click="
+                    $router.push('/pesanan');
+                    isProfileMenuOpen = false
+                  "
+                  class="w-full px-4 py-3 text-left text-xs font-black uppercase hover:bg-accent border-b border-ink flex items-center gap-3 transition-colors"
+                >
+
+                  <i
+                    class="fa-solid fa-cart-shopping w-4"
+                  ></i>
+
+                  <span>
+                    Pesanan Saya
+                  </span>
+
+                </button>
+
+
+                <!-- ADMIN -->
+
                 <button
                   v-if="currentUser?.role === 'admin'"
                   type="button"
-                  @click="$router.push('/admin'); isProfileMenuOpen = false"
+                  @click="
+                    $router.push('/admin');
+                    isProfileMenuOpen = false
+                  "
                   class="w-full px-4 py-3 text-left text-xs font-black uppercase hover:bg-yellow-300 border-b border-ink flex items-center gap-3 transition-colors"
                 >
-                  <i class="fa-solid fa-shield-halved w-4"></i>
-                  <span>Halaman Admin</span>
+
+                  <i
+                    class="fa-solid fa-shield-halved w-4"
+                  ></i>
+
+                  <span>
+                    Halaman Admin
+                  </span>
+
                 </button>
 
+
                 <!-- LOGOUT -->
+
                 <button
                   type="button"
                   @click="logout"
                   class="w-full px-4 py-3 text-left text-xs font-black uppercase hover:bg-red-400 flex items-center gap-3 transition-colors"
                 >
-                  <i class="fa-solid fa-right-from-bracket w-4"></i>
-                  <span>Logout</span>
+
+                  <i
+                    class="fa-solid fa-right-from-bracket w-4"
+                  ></i>
+
+                  <span>
+                    Logout
+                  </span>
+
                 </button>
+
               </div>
+
             </div>
+
           </template>
+
         </div>
+
       </div>
 
-      <!-- MOBILE HAMBURGER BUTTON -->
-      <div class="flex md:hidden items-center space-x-2">
+
+      <!-- =================================================
+           MOBILE HAMBURGER
+      ================================================== -->
+
+      <div
+        class="flex md:hidden items-center space-x-2"
+      >
+
         <button
-          @click="isMobileMenuOpen = !isMobileMenuOpen"
+          @click="
+            isMobileMenuOpen =
+              !isMobileMenuOpen
+          "
           class="p-2 nb-btn nb-btn-secondary"
+          aria-label="Buka menu"
         >
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 6h16M4 12h16M4 18h16" />
+
+          <svg
+            class="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2.5"
+              d="M4 6h16M4 12h16M4 18h16"
+            />
+
           </svg>
+
         </button>
+
       </div>
 
     </div>
 
-    <!-- MOBILE MENU OVERLAY -->
+
+    <!-- =====================================================
+         MOBILE MENU
+    ====================================================== -->
+
     <div
       v-if="isMobileMenuOpen"
       class="md:hidden bg-paper nb-border-b px-4 py-4 space-y-3"
     >
-      <div class="flex flex-col space-y-2 text-sm font-bold uppercase">
-        <button @click="onNavClick('view-home')" class="p-2 text-left hover:bg-accent border border-ink">
+
+      <div
+        class="flex flex-col space-y-2 text-sm font-bold uppercase"
+      >
+
+        <!-- BERANDA -->
+
+        <button
+          @click="onNavClick('view-home')"
+          class="p-2 text-left hover:bg-accent border border-ink"
+        >
           Beranda
         </button>
-        <button @click="onNavClick('view-events')" class="p-2 text-left hover:bg-accent border border-ink">
-          Semua Event
-        </button>
+
+
+        <!-- KATEGORI -->
+
         <button
-  @click="$router.push('/my-tickets'); isMobileMenuOpen = false"
-  class="p-2 text-left hover:bg-accent border border-ink flex items-center gap-3"
->
-  <i class="fa-solid fa-ticket w-4"></i>
-  My Ticket
-</button>
-        <button @click="onNavClick('view-favorites')" class="p-2 text-left hover:bg-accent border border-ink">
-          Event Favorit ({{ favoritesCount }})
+          @click="onNavClick('view-events')"
+          class="p-2 text-left hover:bg-accent border border-ink"
+        >
+          Kategori
         </button>
-        <button @click="onNavClick('view-community')" class="p-2 text-left hover:bg-accent border border-ink">
-          Komunitas BDG
+
+
+        <!-- LOKASI VENUE -->
+
+        <button
+          @click="goToVenue"
+          class="p-2 text-left hover:bg-accent border border-ink"
+        >
+          Lokasi Venue
         </button>
-        <button @click="onNavClick('view-organizer-reg')" class="p-2 text-left bg-beige hover:bg-accent border border-ink">
+
+
+        <!-- TENTANG KAMI -->
+
+        <button
+          @click="goToAbout"
+          class="p-2 text-left hover:bg-accent border border-ink"
+        >
+          Tentang Kami
+        </button>
+
+
+        <!-- EVENT FAVORIT -->
+
+        <button
+          @click="onNavClick('view-favorites')"
+          class="p-2 text-left hover:bg-accent border border-ink"
+        >
+          Event Favorit
+          ({{ favoritesCount }})
+        </button>
+
+
+        <!-- MY TICKET -->
+
+        <button
+          @click="
+            $router.push('/my-tickets');
+            isMobileMenuOpen = false
+          "
+          class="p-2 text-left hover:bg-accent border border-ink flex items-center gap-3"
+        >
+
+          <i
+            class="fa-solid fa-ticket w-4"
+          ></i>
+
+          My Ticket
+
+        </button>
+
+
+        <!-- DASHBOARD ORGANIZER -->
+
+        <button
+          @click="
+            onNavClick('view-organizer-reg')
+          "
+          class="p-2 text-left bg-beige hover:bg-accent border border-ink"
+        >
           Dashboard Organizer
         </button>
 
+
+        <!-- =================================================
+             USER LOGIN
+        ================================================== -->
+
         <template v-if="isLoggedIn">
-          <div class="border-t-2 border-ink pt-3 mt-2">
-            <div class="p-3 bg-accent border-2 border-ink">
-              <p class="font-black text-sm uppercase">{{ currentUser?.name || 'USER' }}</p>
-              <p class="text-xs font-medium mt-1 truncate">{{ currentUser?.email }}</p>
-              <span v-if="currentUser?.role" class="inline-block mt-2 px-2 py-1 text-[10px] font-black uppercase bg-paper border border-ink">
+
+          <div
+            class="border-t-2 border-ink pt-3 mt-2"
+          >
+
+            <div
+              class="p-3 bg-accent border-2 border-ink"
+            >
+
+              <p
+                class="font-black text-sm uppercase"
+              >
+                {{ currentUser?.name || 'USER' }}
+              </p>
+
+              <p
+                class="text-xs font-medium mt-1 truncate"
+              >
+                {{ currentUser?.email }}
+              </p>
+
+              <span
+                v-if="currentUser?.role"
+                class="inline-block mt-2 px-2 py-1 text-[10px] font-black uppercase bg-paper border border-ink"
+              >
                 {{ currentUser.role }}
               </span>
+
             </div>
+
           </div>
-          <button @click="onNavClick('view-profile')" class="p-2 text-left hover:bg-accent border border-ink flex items-center gap-3">
-            <i class="fa-solid fa-user w-4"></i> My Profile
-          </button>
+
+
+          <!-- PROFILE -->
+
           <button
-  @click="$router.push('/my-tickets'); isMobileMenuOpen = false"
-  class="p-2 text-left hover:bg-accent border border-ink"
->
-  Tiket Saya
-</button>
-          <button @click="onNavClick('view-pesanan')" class="p-2 text-left hover:bg-accent border border-ink flex items-center gap-3">
-            <i class="fa-solid fa-cart-shopping w-4"></i> Pesanan Saya
+            @click="onNavClick('view-profile')"
+            class="p-2 text-left hover:bg-accent border border-ink flex items-center gap-3"
+          >
+
+            <i
+              class="fa-solid fa-user w-4"
+            ></i>
+
+            My Profile
+
           </button>
-          <button v-if="currentUser?.role === 'admin'" @click="$router.push('/admin'); isMobileMenuOpen = false" class="p-2 text-left hover:bg-yellow-300 border border-ink flex items-center gap-3">
-            <i class="fa-solid fa-shield-halved w-4"></i> Halaman Admin
+
+
+          <!-- TICKET -->
+
+          <button
+            @click="
+              $router.push('/my-tickets');
+              isMobileMenuOpen = false
+            "
+            class="p-2 text-left hover:bg-accent border border-ink"
+          >
+            Tiket Saya
           </button>
-          <button @click="logout" class="p-2 text-left hover:bg-red-400 border border-ink flex items-center gap-3 text-red-700">
-            <i class="fa-solid fa-right-from-bracket w-4"></i> Logout
+
+
+          <!-- PESANAN -->
+
+          <button
+            @click="
+              onNavClick('view-pesanan')
+            "
+            class="p-2 text-left hover:bg-accent border border-ink flex items-center gap-3"
+          >
+
+            <i
+              class="fa-solid fa-cart-shopping w-4"
+            ></i>
+
+            Pesanan
+
           </button>
+
+
+          <!-- ADMIN -->
+
+          <button
+            v-if="currentUser?.role === 'admin'"
+            @click="
+              $router.push('/admin');
+              isMobileMenuOpen = false
+            "
+            class="p-2 text-left hover:bg-yellow-300 border border-ink flex items-center gap-3"
+          >
+
+            <i
+              class="fa-solid fa-shield-halved w-4"
+            ></i>
+
+            Halaman Admin
+
+          </button>
+
+
+          <!-- LOGOUT -->
+
+          <button
+            @click="logout"
+            class="p-2 text-left hover:bg-red-400 border border-ink flex items-center gap-3 text-red-700"
+          >
+
+            <i
+              class="fa-solid fa-right-from-bracket w-4"
+            ></i>
+
+            Logout
+
+          </button>
+
         </template>
+
       </div>
 
-      <div v-if="!isLoggedIn" class="pt-2 border-t border-ink flex space-x-2">
-        <button @click="$router.push('/login'); isMobileMenuOpen = false" class="flex-1 py-2 text-xs uppercase nb-btn nb-btn-secondary">
+
+      <!-- =================================================
+           MOBILE LOGIN
+      ================================================== -->
+
+      <div
+        v-if="!isLoggedIn"
+        class="pt-2 border-t border-ink flex space-x-2"
+      >
+
+        <button
+          @click="
+            $router.push('/login');
+            isMobileMenuOpen = false
+          "
+          class="flex-1 py-2 text-xs uppercase nb-btn nb-btn-secondary"
+        >
           Masuk
         </button>
-        <button @click="$router.push('/register'); isMobileMenuOpen = false" class="flex-1 py-2 text-xs uppercase nb-btn nb-btn-primary">
+
+
+        <button
+          @click="
+            $router.push('/register');
+            isMobileMenuOpen = false
+          "
+          class="flex-1 py-2 text-xs uppercase nb-btn nb-btn-primary"
+        >
           Daftar
         </button>
+
       </div>
+
     </div>
+
   </header>
+
 </template>
 
+
 <style scoped>
-/* ── Bounce saat item baru masuk ke navbar ─────────────────────────── */
+
 @keyframes wishlist-bounce {
-  0%   { transform: scale(1); }
-  25%  { transform: scale(1.45) rotate(-8deg); }
-  50%  { transform: scale(0.88) rotate(5deg); }
-  70%  { transform: scale(1.18) rotate(-3deg); }
-  100% { transform: scale(1) rotate(0deg); }
+
+  0% {
+    transform: scale(1);
+  }
+
+  25% {
+    transform: scale(1.45) rotate(-8deg);
+  }
+
+  50% {
+    transform: scale(0.88) rotate(5deg);
+  }
+
+  70% {
+    transform: scale(1.18) rotate(-3deg);
+  }
+
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+
 }
 
 @keyframes count-pop {
-  0%   { transform: scale(0.5); opacity: 0; }
-  60%  { transform: scale(1.4); opacity: 1; }
-  100% { transform: scale(1);   opacity: 1; }
+
+  0% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+
+  60% {
+    transform: scale(1.4);
+    opacity: 1;
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+
 }
 
 .wishlist-nav-btn {
   position: relative;
-  transition: transform 0.15s, box-shadow 0.15s;
+
+  transition:
+    transform 0.15s,
+    box-shadow 0.15s;
 }
 
-/* Class yang ditambahkan via JS */
 :global(.wishlist-bounce) {
-  animation: wishlist-bounce 0.45s cubic-bezier(.36,.07,.19,.97) both;
+  animation:
+    wishlist-bounce
+    0.45s
+    cubic-bezier(.36,.07,.19,.97)
+    both;
 }
 
 .wishlist-count {
   display: inline-flex;
+
   align-items: center;
   justify-content: center;
+
   min-width: 16px;
   height: 16px;
+
   background: #111;
   color: #FFD84D;
+
   border-radius: 2px;
+
   padding: 0 3px;
-  animation: count-pop 0.35s cubic-bezier(.36,.07,.19,.97) both;
+
+  animation:
+    count-pop
+    0.35s
+    cubic-bezier(.36,.07,.19,.97)
+    both;
 }
+
 </style>

@@ -1,19 +1,18 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\EventController;
-use App\Http\Controllers\Api\TicketController;
+use App\Http\Controllers\Api\IssuedTicketController;
+use App\Http\Controllers\Api\MidtransController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\PaymentController;
-use App\Http\Controllers\Api\UserController;
-use App\Http\Controllers\Api\MidtransController;
-use App\Http\Controllers\Api\IssuedTicketController;
-use App\Http\Controllers\Api\ScannerController;
-use App\Http\Controllers\Api\UploadController;
 use App\Http\Controllers\Api\ReportController;
+use App\Http\Controllers\Api\ScannerController;
+use App\Http\Controllers\Api\TicketController;
+use App\Http\Controllers\Api\UploadController;
+use App\Http\Controllers\Api\UserController;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -43,14 +42,14 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // ─── Laporan & Statistik ─────────────────────────────────────────────
     Route::prefix('reports')->group(function () {
-        Route::get('/statistik',          [ReportController::class, 'statistik']);
-        Route::get('/penjualan',          [ReportController::class, 'penjualan']);
-        Route::get('/event',              [ReportController::class, 'laporanEvent']);
-        Route::get('/tiket',              [ReportController::class, 'laporanTiket']);
-        Route::get('/scan',               [ReportController::class, 'laporanScan']);
-        Route::get('/pengguna',           [ReportController::class, 'laporanPengguna']);
-        Route::get('/export/pdf/{type}',  [ReportController::class, 'exportPdf']);
-        Route::get('/export/excel/{type}',[ReportController::class, 'exportExcel']);
+        Route::get('/statistik', [ReportController::class, 'statistik']);
+        Route::get('/penjualan', [ReportController::class, 'penjualan']);
+        Route::get('/event', [ReportController::class, 'laporanEvent']);
+        Route::get('/tiket', [ReportController::class, 'laporanTiket']);
+        Route::get('/scan', [ReportController::class, 'laporanScan']);
+        Route::get('/pengguna', [ReportController::class, 'laporanPengguna']);
+        Route::get('/export/pdf/{type}', [ReportController::class, 'exportPdf']);
+        Route::get('/export/excel/{type}', [ReportController::class, 'exportExcel']);
         Route::post('/export/excel-page', [ReportController::class, 'exportExcelPage']);
     });
 });
@@ -99,7 +98,10 @@ Route::apiResource('pengguna', UserController::class);
 | PAYMENT / PEMBAYARAN
 |--------------------------------------------------------------------------
 */
-Route::apiResource('payments', PaymentController::class);
-Route::apiResource('pembayaran', PaymentController::class);
+// Midtrans routes harus didaftarkan SEBELUM apiResource agar tidak tertangkap oleh {payment} wildcard
 Route::post('/payments/snap-token', [MidtransController::class, 'createSnapToken']);
 Route::post('/payments/finish', [MidtransController::class, 'finishPayment']);
+Route::post('/payments/notification', [MidtransController::class, 'handleNotification']);
+
+Route::apiResource('payments', PaymentController::class);
+Route::apiResource('pembayaran', PaymentController::class);

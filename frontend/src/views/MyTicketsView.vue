@@ -20,7 +20,6 @@
 
       <div class="max-w-6xl mx-auto">
 
-
         <!-- =========================
              HEADER
         ========================== -->
@@ -48,6 +47,7 @@
                 class="mt-2 text-sm md:text-base font-bold text-gray-600"
               >
                 Tiket event yang sudah kamu beli.
+                Untuk Melihat Barcode Tiket Clik Detail!
               </p>
 
             </div>
@@ -149,7 +149,7 @@
               <label
                 class="block text-xs font-black uppercase mb-2"
               >
-                Dari Tanggal Pesan
+                Dari Tanggal 
               </label>
 
               <input
@@ -167,7 +167,7 @@
               <label
                 class="block text-xs font-black uppercase mb-2"
               >
-                Sampai Tanggal Pesan
+                Sampai Tanggal 
               </label>
 
               <input
@@ -248,10 +248,6 @@
           class="border-4 border-black bg-white p-10 text-center shadow-[6px_6px_0_#000]"
         >
 
-          <div class="text-5xl mb-4">
-            🎟️
-          </div>
-
           <h2 class="text-2xl font-black uppercase mb-2">
             TIKET TIDAK DITEMUKAN
           </h2>
@@ -275,7 +271,7 @@
         ========================== -->
         <div
           v-else
-          class="grid grid-cols-1 lg:grid-cols-2 gap-6"
+          class="flex flex-col gap-5"
         >
 
           <div
@@ -289,22 +285,22 @@
             "
           >
 
-
             <!-- =========================
                  TICKET HEADER
             ========================== -->
             <div class="border-b-4 border-black p-4 md:p-5">
 
               <div
-                class="flex items-start justify-between gap-3"
+                class="flex flex-col md:flex-row md:items-center md:justify-between gap-4"
               >
 
+                <!-- EVENT -->
                 <div class="min-w-0">
 
                   <p
                     class="text-[10px] md:text-xs font-black uppercase"
                   >
-                    E-TICKET #{{ ticketNumber(index) }}
+                  {{ ticket.order?.kode_pesanan || '-' }}
                   </p>
 
                   <h2
@@ -319,23 +315,45 @@
                 </div>
 
 
-                <!-- STATUS -->
-                <span
-                  class="shrink-0 border-2 border-black px-2 md:px-3 py-1 text-[10px] md:text-xs font-black uppercase"
-                  :class="
-                    ticket.status === 'used'
-                      ? 'bg-gray-500 text-white'
-                      : 'bg-yellow-300 text-black'
-                  "
+                <!-- STATUS + DROPDOWN -->
+                <div
+                  class="flex items-center gap-3 shrink-0"
                 >
 
-                  {{
-                    ticket.status === 'used'
-                      ? 'Sudah Digunakan'
-                      : 'Belum Digunakan'
-                  }}
+                  <!-- STATUS -->
+                  <span
+                    class="border-2 border-black px-2 md:px-3 py-1 text-[10px] md:text-xs font-black uppercase"
+                    :class="
+                      ticket.status === 'used'
+                        ? 'bg-gray-500 text-white'
+                        : 'bg-yellow-300 text-black'
+                    "
+                  >
 
-                </span>
+                    {{
+                      ticket.status === 'used'
+                        ? 'Sudah Digunakan'
+                        : 'Belum Digunakan'
+                    }}
+
+                  </span>
+
+
+                  <!-- DROPDOWN BUTTON -->
+                  <button
+                    @click="toggleTicket(ticket.id)"
+                    class="border-4 border-black bg-white px-3 py-2 font-black text-sm shadow-[3px_3px_0_#000] hover:bg-yellow-300 transition-all"
+                  >
+
+                    {{ isTicketOpen(ticket.id) ? 'TUTUP' : 'DETAIL' }}
+
+                    <span class="ml-1">
+                      {{ isTicketOpen(ticket.id) ? '↑' : '↓' }}
+                    </span>
+
+                  </button>
+
+                </div>
 
               </div>
 
@@ -343,17 +361,24 @@
 
 
             <!-- =========================
-                 TICKET BODY
+                 DROPDOWN CONTENT
             ========================== -->
-            <div class="p-4 md:p-5">
+            <div
+              v-if="isTicketOpen(ticket.id)"
+              class="p-4 md:p-5"
+            >
 
-
-              <!-- INFO -->
-              <div class="grid grid-cols-2 gap-4 mb-5">
-
+              <!-- =========================
+                   INFO TICKET
+              ========================== -->
+              <div
+                class="border-4 border-black bg-white"
+              >
 
                 <!-- JENIS TIKET -->
-                <div>
+                <div
+                  class="flex flex-col md:flex-row md:items-center md:justify-between gap-1 border-b-2 border-black p-4"
+                >
 
                   <p
                     class="text-[10px] md:text-xs font-black text-gray-500 uppercase"
@@ -361,7 +386,9 @@
                     Jenis Tiket
                   </p>
 
-                  <p class="font-black mt-1">
+                  <p
+                    class="font-black md:text-right"
+                  >
                     {{ ticket.ticket?.nama_tiket || '-' }}
                   </p>
 
@@ -369,7 +396,9 @@
 
 
                 <!-- KODE PESANAN -->
-                <div>
+                <div
+                  class="flex flex-col md:flex-row md:items-center md:justify-between gap-1 border-b-2 border-black p-4"
+                >
 
                   <p
                     class="text-[10px] md:text-xs font-black text-gray-500 uppercase"
@@ -377,7 +406,9 @@
                     Kode Pesanan
                   </p>
 
-                  <p class="font-black mt-1 break-all">
+                  <p
+                    class="font-black md:text-right break-all"
+                  >
                     {{ ticket.order?.kode_pesanan || '-' }}
                   </p>
 
@@ -385,7 +416,9 @@
 
 
                 <!-- TANGGAL PESAN -->
-                <div>
+                <div
+                  class="flex flex-col md:flex-row md:items-center md:justify-between gap-1 border-b-2 border-black p-4"
+                >
 
                   <p
                     class="text-[10px] md:text-xs font-black text-gray-500 uppercase"
@@ -393,7 +426,9 @@
                     Tanggal Pesan
                   </p>
 
-                  <p class="font-black mt-1">
+                  <p
+                    class="font-black md:text-right"
+                  >
                     {{ formatOrderDate(ticket) }}
                   </p>
 
@@ -401,7 +436,9 @@
 
 
                 <!-- WAKTU EVENT -->
-                <div>
+                <div
+                  class="flex flex-col md:flex-row md:items-center md:justify-between gap-1 border-b-2 border-black p-4"
+                >
 
                   <p
                     class="text-[10px] md:text-xs font-black text-gray-500 uppercase"
@@ -409,15 +446,19 @@
                     Waktu Event
                   </p>
 
-                  <p class="font-black mt-1">
+                  <p
+                    class="font-black md:text-right"
+                  >
                     {{ ticket.ticket?.event?.waktu || '-' }}
                   </p>
 
                 </div>
 
 
-                <!-- LOKASI -->
-                <div class="col-span-2">
+                <!-- LOKASI EVENT -->
+                <div
+                  class="flex flex-col md:flex-row md:items-center md:justify-between gap-1 p-4"
+                >
 
                   <p
                     class="text-[10px] md:text-xs font-black text-gray-500 uppercase"
@@ -425,7 +466,9 @@
                     Lokasi Event
                   </p>
 
-                  <p class="font-black mt-1">
+                  <p
+                    class="font-black md:text-right"
+                  >
                     {{ ticket.ticket?.event?.lokasi || '-' }}
                   </p>
 
@@ -438,7 +481,7 @@
                    QR CODE
               ========================== -->
               <div
-                class="border-4 border-black p-4 text-center"
+                class="mt-5 border-4 border-black p-4 text-center"
                 :class="
                   ticket.status === 'used'
                     ? 'bg-gray-200'
@@ -629,7 +672,28 @@ const dateTo = ref('')
 
 const currentPage = ref(1)
 
-const perPage = 4
+/*
+|--------------------------------------------------------------------------
+| PER PAGE
+|--------------------------------------------------------------------------
+|
+| 10 tiket setiap halaman.
+|
+*/
+
+const perPage = 10
+
+
+/*
+|--------------------------------------------------------------------------
+| OPEN TICKET
+|--------------------------------------------------------------------------
+|
+| Menyimpan ID tiket yang sedang dibuka.
+|
+*/
+
+const openedTickets = ref([])
 
 
 /*
@@ -641,6 +705,44 @@ const perPage = 4
 const currentView = ref('view-my-tickets')
 
 const wishlist = ref([])
+
+
+/*
+|--------------------------------------------------------------------------
+| TOGGLE DROPDOWN
+|--------------------------------------------------------------------------
+*/
+
+const toggleTicket = (ticketId) => {
+
+  const index =
+    openedTickets.value.indexOf(ticketId)
+
+
+  if (index === -1) {
+
+    openedTickets.value.push(ticketId)
+
+  } else {
+
+    openedTickets.value.splice(index, 1)
+
+  }
+
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| CHECK TICKET OPEN
+|--------------------------------------------------------------------------
+*/
+
+const isTicketOpen = (ticketId) => {
+
+  return openedTickets.value.includes(ticketId)
+
+}
 
 
 /*
@@ -741,11 +843,15 @@ const getTickets = async () => {
 
   try {
 
-    const response = await api.get('/my-tickets')
+    const response =
+      await api.get('/my-tickets')
 
-    tickets.value = response.data.data || []
+    tickets.value =
+      response.data.data || []
 
     currentPage.value = 1
+
+    openedTickets.value = []
 
     loading.value = false
 
@@ -799,14 +905,30 @@ const renderQRCodes = async () => {
 
   await nextTick()
 
-  for (const ticket of paginatedTickets.value) {
+  for (
+    const ticket of paginatedTickets.value
+  ) {
+
+    /*
+    | QR hanya dibuat kalau dropdown
+    | tiket sedang terbuka.
+    */
+
+    if (!isTicketOpen(ticket.id)) {
+      continue
+    }
+
 
     const element =
-      document.getElementById(`qr-${ticket.id}`)
+      document.getElementById(
+        `qr-${ticket.id}`
+      )
+
 
     if (!element) {
       continue
     }
+
 
     if (!ticket.qr_token) {
       continue
@@ -823,7 +945,7 @@ const renderQRCodes = async () => {
 
 
       /*
-      | Buat QR sebagai DATA URL
+      | Buat QR
       */
 
       const qrDataUrl =
@@ -860,16 +982,18 @@ const renderQRCodes = async () => {
 
 
       /*
-      | Untuk tiket yang sudah digunakan,
-      | QR tetap ada tetapi dibuat abu-abu
+      | Tiket sudah digunakan
       */
 
-      if (ticket.status === 'used') {
+      if (
+        ticket.status === 'used'
+      ) {
 
         image.style.filter =
           'grayscale(100%)'
 
-        image.style.opacity = '0.4'
+        image.style.opacity =
+          '0.4'
 
       }
 
@@ -902,14 +1026,6 @@ const renderQRCodes = async () => {
 /*
 |--------------------------------------------------------------------------
 | ORDER DATE
-|--------------------------------------------------------------------------
-|
-| Tanggal yang digunakan adalah tanggal PESAN.
-|
-| Prioritas:
-| 1. order.created_at
-| 2. issued ticket created_at
-|
 |--------------------------------------------------------------------------
 */
 
@@ -985,7 +1101,9 @@ const formatDateTime = (date) => {
 
 const filteredTickets = computed(() => {
 
-  let result = [...tickets.value]
+  let result = [
+    ...tickets.value
+  ]
 
 
   /*
@@ -999,34 +1117,37 @@ const filteredTickets = computed(() => {
       .trim()
       .toLowerCase()
 
+
   if (keyword) {
 
-    result = result.filter(ticket => {
+    result =
+      result.filter(ticket => {
 
-      const eventName =
-        ticket.ticket?.event?.nama_event
-          ?.toLowerCase() || ''
+        const eventName =
+          ticket.ticket?.event?.nama_event
+            ?.toLowerCase() || ''
 
-      const ticketName =
-        ticket.ticket?.nama_tiket
-          ?.toLowerCase() || ''
+        const ticketName =
+          ticket.ticket?.nama_tiket
+            ?.toLowerCase() || ''
 
-      const orderCode =
-        ticket.order?.kode_pesanan
-          ?.toLowerCase() || ''
+        const orderCode =
+          ticket.order?.kode_pesanan
+            ?.toLowerCase() || ''
 
-      const qrToken =
-        ticket.qr_token
-          ?.toLowerCase() || ''
+        const qrToken =
+          ticket.qr_token
+            ?.toLowerCase() || ''
 
-      return (
-        eventName.includes(keyword) ||
-        ticketName.includes(keyword) ||
-        orderCode.includes(keyword) ||
-        qrToken.includes(keyword)
-      )
 
-    })
+        return (
+          eventName.includes(keyword) ||
+          ticketName.includes(keyword) ||
+          orderCode.includes(keyword) ||
+          qrToken.includes(keyword)
+        )
+
+      })
 
   }
 
@@ -1037,13 +1158,19 @@ const filteredTickets = computed(() => {
   |--------------------------------------------------------------------------
   */
 
-  if (statusFilter.value !== 'all') {
+  if (
+    statusFilter.value !== 'all'
+  ) {
 
-    result = result.filter(ticket => {
+    result =
+      result.filter(ticket => {
 
-      return ticket.status === statusFilter.value
+        return (
+          ticket.status ===
+          statusFilter.value
+        )
 
-    })
+      })
 
   }
 
@@ -1061,18 +1188,24 @@ const filteredTickets = computed(() => {
         `${dateFrom.value}T00:00:00`
       )
 
-    result = result.filter(ticket => {
 
-      const ticketDate =
-        getOrderDateValue(ticket)
+    result =
+      result.filter(ticket => {
 
-      if (!ticketDate) {
-        return false
-      }
+        const ticketDate =
+          getOrderDateValue(ticket)
 
-      return new Date(ticketDate) >= from
 
-    })
+        if (!ticketDate) {
+          return false
+        }
+
+
+        return (
+          new Date(ticketDate) >= from
+        )
+
+      })
 
   }
 
@@ -1090,18 +1223,24 @@ const filteredTickets = computed(() => {
         `${dateTo.value}T23:59:59`
       )
 
-    result = result.filter(ticket => {
 
-      const ticketDate =
-        getOrderDateValue(ticket)
+    result =
+      result.filter(ticket => {
 
-      if (!ticketDate) {
-        return false
-      }
+        const ticketDate =
+          getOrderDateValue(ticket)
 
-      return new Date(ticketDate) <= to
 
-    })
+        if (!ticketDate) {
+          return false
+        }
+
+
+        return (
+          new Date(ticketDate) <= to
+        )
+
+      })
 
   }
 
@@ -1145,6 +1284,7 @@ const paginatedTickets = computed(() => {
   const end =
     start + perPage
 
+
   return filteredTickets.value.slice(
     start,
     end
@@ -1183,11 +1323,23 @@ const changePage = (page) => {
     return
   }
 
+
   if (page > totalPages.value) {
     return
   }
 
-  currentPage.value = page
+
+  currentPage.value =
+    page
+
+
+  /*
+  | Tutup semua dropdown
+  | ketika pindah halaman.
+  */
+
+  openedTickets.value = []
+
 
   window.scrollTo({
     top: 0,
@@ -1225,13 +1377,16 @@ const resetFilters = () => {
 
   search.value = ''
 
-  statusFilter.value = 'all'
+  statusFilter.value =
+    'all'
 
   dateFrom.value = ''
 
   dateTo.value = ''
 
   currentPage.value = 1
+
+  openedTickets.value = []
 
 }
 
@@ -1253,6 +1408,8 @@ watch(
 
     currentPage.value = 1
 
+    openedTickets.value = []
+
     await nextTick()
 
     await renderQRCodes()
@@ -1271,10 +1428,37 @@ watch(
   currentPage,
   async () => {
 
+    openedTickets.value = []
+
     await nextTick()
 
     await renderQRCodes()
 
+  }
+)
+
+
+/*
+|--------------------------------------------------------------------------
+| WATCH OPENED TICKETS
+|--------------------------------------------------------------------------
+|
+| Ketika DETAIL ditekan, QR dibuat setelah
+| bagian dropdown muncul.
+|
+*/
+
+watch(
+  openedTickets,
+  async () => {
+
+    await nextTick()
+
+    await renderQRCodes()
+
+  },
+  {
+    deep: true
   }
 )
 

@@ -106,14 +106,6 @@
           <!-- ACTIONS -->
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-6">
 
-            <!-- MY TICKETS -->
-            <button
-              @click="$router.push('/my-tickets')"
-              class="border-4 border-black bg-[#FFD84D] py-3 px-4 font-black uppercase text-sm shadow-[4px_4px_0_#000] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all"
-            >
-              <i class="fa-solid fa-ticket mr-2"></i>
-              My Tickets
-            </button>
 
             <!-- LOGOUT -->
             <button

@@ -52,17 +52,7 @@
             </p>
           </div>
           <div class="flex gap-3">
-            <button
-              @click="fetchOrders"
-              :disabled="loading"
-              class="border-4 border-black bg-white px-4 py-3 font-black uppercase text-sm shadow-[5px_5px_0_#000] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-            >
-              <svg :class="{ 'animate-spin': loading }" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                <polyline points="1 4 1 10 7 10"></polyline>
-                <path d="M3.51 15a9 9 0 1 0 .49-3.09"></path>
-              </svg>
-              Refresh
-            </button>
+      
             <button
               @click="$router.push('/')"
               class="border-4 border-black bg-white px-4 py-3 font-black uppercase text-sm shadow-[5px_5px_0_#000] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all"
@@ -74,86 +64,178 @@
 
         <!-- FILTER BAR -->
         <div class="border-4 border-black bg-white shadow-[5px_5px_0_#000] p-5 mb-6">
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
 
-            <!-- Search -->
-            <div class="lg:col-span-2">
-              <label class="block text-xs font-black uppercase mb-2">Cari Pesanan</label>
-              <div class="relative">
-                <svg class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                  <circle cx="11" cy="11" r="8"></circle>
-                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                </svg>
-                <input
-                  v-model="searchQuery"
-                  type="text"
-                  placeholder="Kode pesanan, nama event..."
-                  class="w-full border-4 border-black bg-white pl-9 pr-8 py-2.5 text-sm font-bold outline-none focus:bg-yellow-50"
-                />
-                <button
-                  v-if="searchQuery"
-                  @click="searchQuery = ''"
-                  class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black font-black text-lg leading-none"
-                >×</button>
-              </div>
-            </div>
+  <!-- =========================
+       FILTER SEJAJAR
+  ========================== -->
+  <div
+    class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4"
+  >
 
-            <!-- Filter Status -->
-            <div>
-              <label class="block text-xs font-black uppercase mb-2">Status Pembayaran</label>
-              <select
-                v-model="filterStatus"
-                class="w-full border-4 border-black bg-white px-3 py-2.5 text-sm font-bold outline-none"
-              >
-                <option value="">Semua Status</option>
-                <option value="dibayar">Sudah Dibayar</option>
-                <option value="pending">Belum Dibayar</option>
-                <option value="selesai">Selesai</option>
-                <option value="dibatalkan">Dibatalkan</option>
-              </select>
-            </div>
+    <!-- SEARCH -->
+    <div>
+      <label class="block text-xs font-black uppercase mb-2">
+        Cari Pesanan
+      </label>
 
-            <!-- Filter Tanggal Dari -->
-            <div>
-              <label class="block text-xs font-black uppercase mb-2">Dari Tanggal</label>
-              <input
-                v-model="filterDateFrom"
-                type="date"
-                class="w-full border-4 border-black bg-white px-3 py-2.5 text-sm font-bold outline-none"
-              />
-            </div>
+      <div class="relative">
 
-            <!-- Filter Tanggal Sampai -->
-            <div>
-              <label class="block text-xs font-black uppercase mb-2">Sampai Tanggal</label>
-              <input
-                v-model="filterDateTo"
-                type="date"
-                class="w-full border-4 border-black bg-white px-3 py-2.5 text-sm font-bold outline-none"
-              />
-            </div>
+        <!-- ICON SEARCH -->
+        <svg
+          class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.5"
+        >
+          <circle cx="11" cy="11" r="8"></circle>
+          <line
+            x1="21"
+            y1="21"
+            x2="16.65"
+            y2="16.65"
+          ></line>
+        </svg>
 
-          </div>
+        <input
+          v-model="searchQuery"
+          type="text"
+          placeholder="Kode pesanan, nama event..."
+          class="w-full border-4 border-black bg-white pl-9 pr-8 py-2.5 text-sm font-bold outline-none focus:bg-yellow-50"
+        />
 
-          <!-- Info + Reset -->
-          <div class="flex items-center justify-between border-t-2 border-black pt-3">
-            <p class="text-xs font-bold text-gray-600">
-              Menampilkan <span class="font-black text-black">{{ filtered.length }}</span> dari
-              <span class="font-black text-black">{{ orders.length }}</span> pesanan
-            </p>
-            <button
-              v-if="hasActiveFilter"
-              @click="resetFilters"
-              class="text-xs font-black uppercase underline hover:no-underline flex items-center gap-1"
-            >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                <polyline points="1 4 1 10 7 10"></polyline>
-                <path d="M3.51 15a9 9 0 1 0 .49-3.09"></path>
-              </svg>
-              Reset Filter
-            </button>
-          </div>
-        </div>
+        <!-- CLEAR SEARCH -->
+        <button
+          v-if="searchQuery"
+          @click="searchQuery = ''"
+          type="button"
+          class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black font-black text-lg leading-none"
+        >
+          ×
+        </button>
+
+      </div>
+    </div>
+
+
+    <!-- STATUS -->
+    <div>
+      <label class="block text-xs font-black uppercase mb-2">
+        Status Pembayaran
+      </label>
+
+      <select
+        v-model="filterStatus"
+        class="w-full border-4 border-black bg-white px-3 py-2.5 text-sm font-bold outline-none focus:bg-yellow-50"
+      >
+        <option value="">
+          Semua Status
+        </option>
+
+        <option value="dibayar">
+          Sudah Dibayar
+        </option>
+
+        <option value="pending">
+          Belum Dibayar
+        </option>
+
+        <option value="dibatalkan">
+          Dibatalkan
+        </option>
+      </select>
+    </div>
+
+
+    <!-- DARI TANGGAL -->
+    <div>
+      <label class="block text-xs font-black uppercase mb-2">
+        Dari Tanggal
+      </label>
+
+      <input
+        v-model="filterDateFrom"
+        type="date"
+        class="w-full border-4 border-black bg-white px-3 py-2.5 text-sm font-bold outline-none focus:bg-yellow-50"
+      />
+    </div>
+
+
+    <!-- SAMPAI TANGGAL -->
+    <div>
+      <label class="block text-xs font-black uppercase mb-2">
+        Sampai Tanggal
+      </label>
+
+      <input
+        v-model="filterDateTo"
+        type="date"
+        class="w-full border-4 border-black bg-white px-3 py-2.5 text-sm font-bold outline-none focus:bg-yellow-50"
+      />
+    </div>
+
+  </div>
+
+
+  <!-- =========================
+       INFO + RESET
+  ========================== -->
+  <div
+    class="flex items-center justify-between border-t-2 border-black pt-3"
+  >
+
+    <!-- INFO -->
+    <p class="text-xs font-bold text-gray-600">
+
+      Menampilkan
+
+      <span class="font-black text-black">
+        {{ filtered.length }}
+      </span>
+
+      dari
+
+      <span class="font-black text-black">
+        {{ orders.length }}
+      </span>
+
+      pesanan
+
+    </p>
+
+
+    <!-- RESET -->
+    <button
+      v-if="hasActiveFilter"
+      @click="resetFilters"
+      type="button"
+      class="text-xs font-black uppercase underline hover:no-underline flex items-center gap-1"
+    >
+
+      <svg
+        width="12"
+        height="12"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2.5"
+      >
+        <polyline points="1 4 1 10 7 10"></polyline>
+
+        <path
+          d="M3.51 15a9 9 0 1 0 .49-3.09"
+        ></path>
+      </svg>
+
+      Reset Filter
+
+    </button>
+
+  </div>
+
+</div>
 
         <!-- LOADING -->
         <div v-if="loading" class="border-4 border-black bg-white shadow-[5px_5px_0_#000] p-12 text-center">
@@ -163,7 +245,7 @@
 
         <!-- ERROR -->
         <div v-else-if="error" class="border-4 border-black bg-red-100 shadow-[5px_5px_0_#000] p-8 text-center space-y-4">
-          <div class="text-4xl">⚠️</div>
+          <div class="text-4xl"></div>
           <h2 class="text-xl font-black uppercase">Gagal Memuat Pesanan</h2>
           <p class="font-bold text-sm text-gray-700">{{ error }}</p>
           <button @click="fetchOrders" class="border-4 border-black bg-black text-white px-6 py-3 font-black uppercase shadow-[4px_4px_0_#111]">
@@ -173,7 +255,7 @@
 
         <!-- EMPTY -->
         <div v-else-if="filtered.length === 0 && !loading" class="border-4 border-black bg-white shadow-[5px_5px_0_#000] p-12 text-center space-y-4">
-          <div class="text-5xl">🛒</div>
+          <div class="text-5xl"></div>
           <h2 class="text-2xl font-black uppercase">
             {{ hasActiveFilter ? 'Tidak Ada Pesanan yang Cocok' : 'Belum Ada Pesanan' }}
           </h2>
@@ -224,7 +306,7 @@
                 class="flex items-center justify-between gap-3 text-sm"
               >
                 <div class="flex items-center gap-2 min-w-0">
-                  <span class="text-lg shrink-0">🎫</span>
+                  <span class="text-lg shrink-0"></span>
                   <div class="min-w-0">
                     <p class="font-black uppercase truncate">{{ item.ticket?.event?.nama_event || 'Event' }}</p>
                     <p class="text-xs font-bold text-gray-500">{{ item.ticket?.nama_tiket }} × {{ item.jumlah }}</p>
@@ -252,7 +334,7 @@
                 @click="bayarSekarang(order)"
                 class="border-2 border-black bg-[#FFD84D] px-4 py-2 text-xs font-black uppercase hover:brightness-95 transition-all shadow-[3px_3px_0_#000]"
               >
-                💳 Bayar Sekarang
+                 Bayar Sekarang
               </button>
             </div>
           </div>
@@ -305,10 +387,6 @@
             <span class="text-[10px] font-black uppercase tracking-widest">Detail Rincian</span>
             <h2 class="text-xl font-black uppercase">Pesanan #{{ selectedOrder.kode_pesanan }}</h2>
           </div>
-          <button
-            @click="selectedOrder = null"
-            class="border-2 border-black bg-white w-9 h-9 flex items-center justify-center font-black text-lg hover:bg-red-400 transition-colors"
-          >✕</button>
         </div>
 
         <!-- Modal Body -->
@@ -388,7 +466,7 @@
             @click="bayarSekarang(selectedOrder); selectedOrder = null"
             class="border-4 border-black bg-[#FFD84D] px-5 py-2.5 text-sm font-black uppercase shadow-[4px_4px_0_#000] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all"
           >
-            💳 Bayar Sekarang
+            Bayar Sekarang
           </button>
           <button
             @click="selectedOrder = null"
@@ -605,10 +683,19 @@ const bayarSekarang = async (order) => {
         showHomeFlash('Pembayaran masih pending.', 'warning', 'PEMBAYARAN PENDING')
         fetchOrders()
       },
-      onError: () => {
+      onError: async () => {
+        try {
+          await api.post('/payments/finish', {
+            order_id: order.id,
+            status: 'gagal'
+          })
+        } catch (e) {}
         showHomeFlash('Pembayaran gagal atau dibatalkan.', 'error', 'PEMBAYARAN GAGAL')
+        fetchOrders()
       },
-      onClose: () => {}
+      onClose: () => {
+        fetchOrders()
+      }
     })
   } catch (err) {
     showHomeFlash(

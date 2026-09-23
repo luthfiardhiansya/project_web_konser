@@ -21,19 +21,12 @@
         >
 
           <div>
-            <p class="text-xs font-black uppercase tracking-[3px] mb-2">
-              Saved Events
-            </p>
 
             <h1
               class="text-4xl md:text-5xl font-black uppercase leading-none"
             >
               My Wishlist
             </h1>
-
-            <p class="mt-3 text-sm md:text-base font-bold">
-              Event yang kamu simpan untuk nanti.
-            </p>
           </div>
 
           <!-- BACK -->
