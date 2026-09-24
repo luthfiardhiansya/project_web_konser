@@ -33,7 +33,6 @@
 
           <!-- Banner Event Berakhir -->
           <div v-if="isPastEvent" class="nb-card bg-gray-800 text-white p-4 flex items-center gap-3 border-2 border-gray-700">
-            <div class="w-10 h-10 shrink-0 bg-gray-600 border-2 border-gray-500 flex items-center justify-center text-xl">🏁</div>
             <div>
               <p class="font-black uppercase text-sm tracking-wide">Event Sudah Berakhir</p>
               <p class="text-xs text-gray-400 font-medium mt-0.5">
@@ -70,11 +69,11 @@
           <!-- TIME & LOCATION CARD -->
           <div class="nb-card p-5 grid grid-cols-1 sm:grid-cols-2 gap-4" :class="isPastEvent ? 'bg-gray-100' : 'bg-white'">
             <div class="space-y-1">
-              <div class="text-xs font-bold uppercase text-muted">🗓️ Waktu & Tanggal</div>
+              <div class="text-xs font-bold uppercase text-muted"> Waktu & Tanggal</div>
               <div class="font-black text-base" :class="isPastEvent ? 'text-gray-500' : ''">{{ event.tanggal }} • {{ event.waktu }}</div>
             </div>
             <div class="space-y-1">
-              <div class="text-xs font-bold uppercase text-muted">📍 Lokasi / Venue</div>
+              <div class="text-xs font-bold uppercase text-muted"> Lokasi / Venue</div>
               <div class="font-black text-base" :class="isPastEvent ? 'text-gray-500' : ''">{{ event.lokasi }}</div>
               <div v-if="event.alamat" class="text-xs text-muted font-medium">{{ event.alamat }}</div>
             </div>
@@ -97,7 +96,6 @@
 
             <!-- Panel event berakhir di sidebar tiket -->
             <div v-if="isPastEvent" class="bg-gray-800 text-white p-4 text-center space-y-2">
-              <div class="text-2xl">🏁</div>
               <p class="font-black uppercase text-sm">Penjualan Tiket Ditutup</p>
               <p class="text-xs text-gray-400">Event ini sudah selesai.</p>
             </div>
@@ -128,8 +126,9 @@
 
                   <button
                     @click="openCheckoutModal(ticket)"
-                    :disabled="ticket.stok <= 0 || checkoutLoading"
-                    class="nb-btn nb-btn-primary w-full py-2 text-xs font-black uppercase flex items-center justify-center gap-2"
+                    :disabled="checkoutLoading"
+                    class="nb-btn w-full py-2 text-xs font-black uppercase flex items-center justify-center gap-2"
+                    :class="ticket.stok > 0 ? 'nb-btn-primary' : 'nb-btn-secondary opacity-70 cursor-pointer'"
                   >
                     <i class="fa-solid fa-cart-shopping"></i>
                     <span>{{ ticket.stok > 0 ? 'Beli Tiket Ini' : 'Tiket Habis' }}</span>
@@ -286,6 +285,12 @@ const fetchEventDetail = async () => {
 }
 
 const openCheckoutModal = (ticket) => {
+  const stok = Number(ticket?.stok ?? ticket?.stock ?? 0)
+  if (stok <= 0) {
+    showFlash(`Tiket "${ticket?.nama_tiket || ticket?.name || 'ini'}" sudah habis. Silakan pilih tiket lain.`, 'error', 'TIKET HABIS')
+    return
+  }
+
   if (!isLoggedIn.value) {
     showFlash('Silakan login terlebih dahulu untuk membeli tiket.', 'warning', 'LOGIN DIPERLUKAN')
     router.push('/login')

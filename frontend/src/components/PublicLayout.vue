@@ -663,6 +663,16 @@ export default {
       ticket
     ) {
 
+      const stok = Number(ticket?.stock ?? ticket?.stok ?? 0)
+      if (stok <= 0) {
+        this.showFlash(
+          'TIKET HABIS!',
+          `Tiket "${ticket?.name || ticket?.nama_tiket || 'ini'}" sudah habis. Silakan pilih tiket lain.`,
+          'error'
+        )
+        return
+      }
+
       if (!this.isLoggedIn) {
         this.showFlash(
           'LOGIN DIPERLUKAN!',

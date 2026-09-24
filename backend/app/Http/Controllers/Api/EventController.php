@@ -11,6 +11,7 @@ class EventController extends Controller
     public function index()
     {
         $events = Event::with(['category', 'tickets'])
+            ->withSum('orderDetails as total_sold', 'jumlah')
             ->latest()
             ->get();
 

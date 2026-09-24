@@ -103,7 +103,6 @@
                     v-for="(event, index) in popularEvents"
                     :key="`popular-${event.id}`"
                     class="popular-event-card"
-                    :class="{ 'popular-event-card-featured': index === 0 }"
                   >
                     <div class="event-card-image-wrap">
                       <img :src="event.image" :alt="event.title" class="event-card-image">
@@ -348,6 +347,7 @@
         <section v-if="currentView === 'view-events'" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
           <div class="border-b-2 border-ink pb-4">
             <div class="text-xs font-bold uppercase tracking-widest text-muted">KATALOG EVENT</div>
+            <h1 class="text-4xl font-black uppercase tracking-tight">.</h1>
             <h1 class="text-4xl font-black uppercase tracking-tight">JELAJAHI EVENT MUSIK BANDUNG</h1>
           </div>
 
@@ -482,8 +482,12 @@
                     <span>Rp {{ formatNumber(ticket.price) }}</span>
                   </div>
                   <p class="text-xs font-medium text-muted">{{ ticket.desc }}</p>
-                  <button @click="openCheckoutModal(selectedEvent, ticket)" class="nb-btn nb-btn-primary w-full py-1.5 text-xs uppercase mt-2">
-                    Pilih Tiket Ini
+                  <button
+                    @click="openCheckoutModal(selectedEvent, ticket)"
+                    class="nb-btn w-full py-1.5 text-xs uppercase mt-2"
+                    :class="Number(ticket.stock ?? ticket.stok ?? 0) <= 0 ? 'nb-btn-secondary opacity-70' : 'nb-btn-primary'"
+                  >
+                    {{ Number(ticket.stock ?? ticket.stok ?? 0) <= 0 ? 'Tiket Habis' : 'Pilih Tiket Ini' }}
                   </button>
                 </div>
               </div>
@@ -848,11 +852,16 @@ favorites: JSON.parse(localStorage.getItem('wishlist') || '[]').map(item => item
         return result
       },
 
-    // ── COMPUTED: popular events (max 3, sort by stok terjual) ──────────
+    // ── COMPUTED: popular events (max 3, sort by terbanyak dibeli) ──────────
     popularEvents() {
       return [...this.events]
         .filter(e => !this.isPastEvent(e))
         .sort((a, b) => {
+          const soldA = Number(a.totalSold ?? a.total_sold ?? 0)
+          const soldB = Number(b.totalSold ?? b.total_sold ?? 0)
+          if (soldB !== soldA) {
+            return soldB - soldA
+          }
           const aStock = a.tickets?.reduce((s, t) => s + Number(t.stock ?? t.stok ?? 0), 0) ?? 999
           const bStock = b.tickets?.reduce((s, t) => s + Number(t.stock ?? t.stok ?? 0), 0) ?? 999
           return aStock - bStock
@@ -1101,6 +1110,8 @@ async getEvents() {
               )
             )
           : 0,
+
+      totalSold: Number(event.total_sold || 0),
 
       tickets: (event.tickets || []).map(ticket => ({
         id: ticket.id,
@@ -1427,16 +1438,16 @@ async getEvents() {
       },
 
       openCheckoutModal(event, ticket) {
-        if (!this.isLoggedIn) {
-          showFlash('Silakan login terlebih dahulu untuk membeli tiket.', 'warning', 'LOGIN DIPERLUKAN')
-          this.navigateTo('view-login')
+        // Cek stok tiket — flash jika habis
+        const stok = Number(ticket?.stock ?? ticket?.stok ?? 0)
+        if (stok <= 0) {
+          showFlash(`Tiket "${ticket?.name || ticket?.nama_tiket || 'ini'}" sudah habis. Silakan pilih tiket lain.`, 'error', 'TIKET HABIS')
           return
         }
 
-        // Cek stok tiket — flash jika habis
-        const stok = Number(ticket.stock ?? ticket.stok ?? 0)
-        if (stok <= 0) {
-          showFlash(`Tiket "${ticket.name || ticket.nama_tiket}" sudah habis. Silakan pilih tiket lain.`, 'error', 'TIKET HABIS')
+        if (!this.isLoggedIn) {
+          showFlash('Silakan login terlebih dahulu untuk membeli tiket.', 'warning', 'LOGIN DIPERLUKAN')
+          this.navigateTo('view-login')
           return
         }
 
@@ -2550,20 +2561,18 @@ async getEvents() {
   .section-heading-row p { margin-top: 9px; color: #555; font-size: 13px; font-weight: 600; }
   .section-link { padding: 10px 13px; white-space: nowrap; font-size: 10px; }
 
-  .popular-event-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-  .popular-event-card { background: #fff; border: 2px solid #111; box-shadow: 5px 5px 0 #111; transition: transform .15s ease, box-shadow .15s ease; }
+  .popular-event-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; align-items: stretch; }
+  .popular-event-card { background: #fff; border: 2px solid #111; box-shadow: 5px 5px 0 #111; transition: transform .15s ease, box-shadow .15s ease; display: flex; flex-direction: column; height: 100%; }
   .popular-event-card:hover { transform: translate(-3px,-3px); box-shadow: 8px 8px 0 #111; }
-  .popular-event-card-featured { grid-column: span 2; }
-  .event-card-image-wrap { position: relative; height: 225px; overflow: hidden; border-bottom: 2px solid #111; }
-  .popular-event-card-featured .event-card-image-wrap { height: 320px; }
+  .event-card-image-wrap { position: relative; height: 225px; overflow: hidden; border-bottom: 2px solid #111; flex-shrink: 0; }
   .event-card-image { width: 100%; height: 100%; object-fit: cover; display: block; filter: saturate(.92); }
   .event-number { position: absolute; top: 10px; left: 10px; padding: 4px 7px; color: #111; background: #F2C94C; border: 2px solid #111; font-size: 10px; font-weight: 900; }
   .event-favorite { position: absolute; top: 10px; right: 10px; width: 38px; height: 38px; background: #fff; border: 2px solid #111; box-shadow: 3px 3px 0 #111; font-size: 21px; line-height: 1; cursor: pointer; }
-  .event-card-body { padding: 17px; }
-  .event-category { display: inline-block; padding: 3px 6px; background: #F2C94C; border: 1px solid #111; font-size: 8px; font-weight: 900; text-transform: uppercase; }
+  .event-card-body { padding: 17px; display: flex; flex-direction: column; flex: 1; }
+  .event-category { display: inline-block; padding: 3px 6px; background: #F2C94C; border: 1px solid #111; font-size: 8px; font-weight: 900; text-transform: uppercase; width: fit-content; }
   .event-card-body h3 { margin: 10px 0 7px; font-size: 21px; line-height: 1; font-weight: 900; text-transform: uppercase; }
   .event-card-body p { margin: 4px 0; color: #555; font-size: 10px; font-weight: 700; }
-  .event-card-footer { display: flex; justify-content: space-between; align-items: end; gap: 10px; margin-top: 16px; padding-top: 12px; border-top: 1px solid #111; }
+  .event-card-footer { display: flex; justify-content: space-between; align-items: end; gap: 10px; margin-top: auto; padding-top: 12px; border-top: 1px solid #111; }
   .event-card-footer strong { font-size: 14px; font-weight: 900; }
   .event-card-footer button { padding: 6px 9px; background: #111; color: #fff; border: 2px solid #111; font-size: 9px; font-weight: 900; cursor: pointer; }
 
@@ -2625,8 +2634,7 @@ async getEvents() {
     .hero-video-section { min-height: 720px; }
     .hero-content { padding-top: 110px; }
     .hero-title { font-size: clamp(3rem, 9vw, 5.5rem); }
-    .popular-event-grid { grid-template-columns: repeat(2, 1fr); }
-    .popular-event-card-featured { grid-column: span 2; }
+    .popular-event-grid { grid-template-columns: repeat(3, 1fr); }
     .stats-grid { grid-template-columns: repeat(2, 1fr); }
     .stat-box:nth-child(2) { border-right: 0; }
     .stat-box:nth-child(-n+2) { border-bottom: 2px solid #111; }
@@ -2648,8 +2656,6 @@ async getEvents() {
     .section-heading-row { display: block; }
     .section-link { margin-top: 15px; }
     .popular-event-grid { grid-template-columns: 1fr; }
-    .popular-event-card-featured { grid-column: span 1; }
-    .popular-event-card-featured .event-card-image-wrap { height: 230px; }
     .stats-grid { grid-template-columns: repeat(2, 1fr); }
     .stat-box { min-height: 90px; padding: 13px; }
     .stat-box strong { font-size: 23px; }
