@@ -4,11 +4,27 @@
     <!-- NAVBAR -->
     <Navbar
       :currentView="currentView"
-      :favoritesCount="favorites.length"
+      :favoritesCount="favoritesCount"
       @navigate="navigateTo"
-      @open-search="$emit('open-search')"
+      @open-search="isQuickSearchOpen = true"
       @filter-category="filterCategoryQuick"
     />
+
+    <!-- QUICK SEARCH OVERLAY -->
+    <div
+      v-if="isQuickSearchOpen"
+      class="fixed inset-0 bg-black/60 z-50 flex items-start justify-center pt-20 px-4"
+      @click.self="isQuickSearchOpen = false"
+    >
+      <div class="bg-[#f5f0e8] border-4 border-black shadow-[8px_8px_0_#000] w-full max-w-2xl p-6 relative">
+        <button @click="isQuickSearchOpen = false" class="absolute top-4 right-4 font-black text-xl hover:bg-[#FFD84D] px-2 border border-black">✕</button>
+        <h3 class="font-black text-xl mb-4 uppercase">Cari Event Musik Bandung</h3>
+        <div class="flex gap-2">
+          <input type="text" placeholder="Cari event..." class="border-4 border-black bg-white px-3 py-2 font-bold flex-1 outline-none focus:bg-yellow-100" />
+          <button @click="isQuickSearchOpen = false" class="border-4 border-black bg-black text-white px-5 font-black uppercase">Cari</button>
+        </div>
+      </div>
+    </div>
 
     <!-- CONTENT -->
     <main class="flex-1 flex items-center justify-center px-4 py-5">
@@ -17,95 +33,55 @@
         <!-- HEADER -->
         <div class="flex items-center justify-between mb-4">
           <div>
-            <p class="text-xs font-black uppercase tracking-widest">
-              Account
-            </p>
-
-            <h1 class="text-3xl md:text-4xl font-black uppercase">
-              My Profile
-            </h1>
+            <p class="text-xs font-black uppercase tracking-widest">Account</p>
+            <h1 class="text-3xl md:text-4xl font-black uppercase">My Profile</h1>
           </div>
-
-          <!-- BACK TO HOME -->
           <button
             @click="$router.push('/')"
             class="border-4 border-black bg-white px-4 py-2 font-black uppercase text-sm shadow-[4px_4px_0_#000] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all"
           >
-            <i class="fa-solid fa-arrow-left mr-2"></i>
-            Back
+            <i class="fa-solid fa-arrow-left mr-2"></i>Back
           </button>
         </div>
 
         <!-- PROFILE CARD -->
-        <div
-          class="border-4 border-black bg-white shadow-[7px_7px_0_#000] p-5 md:p-6"
-        >
+        <div class="border-4 border-black bg-white shadow-[7px_7px_0_#000] p-5 md:p-6">
 
           <!-- USER -->
           <div class="flex items-center gap-5">
-
-            <!-- AVATAR -->
-            <div
-              class="w-20 h-20 md:w-24 md:h-24 shrink-0 border-4 border-black bg-[#FFD84D] flex items-center justify-center text-4xl md:text-5xl font-black shadow-[4px_4px_0_#000]"
-            >
+            <div class="w-20 h-20 md:w-24 md:h-24 shrink-0 border-4 border-black bg-[#FFD84D] flex items-center justify-center text-4xl md:text-5xl font-black shadow-[4px_4px_0_#000]">
               {{ user?.name?.charAt(0)?.toUpperCase() || 'U' }}
             </div>
-
-            <!-- USER INFO -->
             <div class="min-w-0">
-
-              <p class="text-xs font-black uppercase tracking-widest mb-1">
-                Account
-              </p>
-
-              <h2
-                class="text-2xl md:text-3xl font-black uppercase truncate"
-              >
-                {{ user?.name || 'User' }}
-              </h2>
-
-              <p class="text-sm font-bold truncate">
-                {{ user?.email || '-' }}
-              </p>
-
+              <p class="text-xs font-black uppercase tracking-widest mb-1">Account</p>
+              <h2 class="text-2xl md:text-3xl font-black uppercase truncate">{{ user?.name || 'User' }}</h2>
+              <p class="text-sm font-bold truncate">{{ user?.email || '-' }}</p>
             </div>
           </div>
 
-          <!-- DIVIDER -->
           <div class="border-t-4 border-black my-6"></div>
 
           <!-- INFORMATION -->
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-
-            <div
-              class="border-2 border-black bg-[#f5f0e8] p-4"
-            >
-              <p class="text-[10px] font-black uppercase tracking-widest mb-1">
-                Name
-              </p>
-
-              <p class="font-bold break-words">
-                {{ user?.name || '-' }}
-              </p>
+            <div class="border-2 border-black bg-[#f5f0e8] p-4">
+              <p class="text-[10px] font-black uppercase tracking-widest mb-1">Name</p>
+              <p class="font-bold break-words">{{ user?.name || '-' }}</p>
             </div>
-
-            <div
-              class="border-2 border-black bg-[#f5f0e8] p-4"
-            >
-              <p class="text-[10px] font-black uppercase tracking-widest mb-1">
-                Email
-              </p>
-
-              <p class="font-bold break-words">
-                {{ user?.email || '-' }}
-              </p>
+            <div class="border-2 border-black bg-[#f5f0e8] p-4">
+              <p class="text-[10px] font-black uppercase tracking-widest mb-1">Email</p>
+              <p class="font-bold break-words">{{ user?.email || '-' }}</p>
             </div>
-
           </div>
 
           <!-- ACTIONS -->
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-6">
-
+            <!-- MY TICKETS -->
+            <button
+              @click="$router.push('/my-tickets')"
+              class="border-4 border-black bg-[#FFD84D] py-3 px-4 font-black uppercase text-sm shadow-[4px_4px_0_#000] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all"
+            >
+              <i class="fa-solid fa-ticket mr-2"></i>My Tickets
+            </button>
 
             <!-- LOGOUT -->
             <button
@@ -113,16 +89,9 @@
               :disabled="isLoggingOut"
               class="border-4 border-black bg-[#ff6b6b] py-3 px-4 font-black uppercase text-sm shadow-[4px_4px_0_#000] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              <i
-                class="fa-solid"
-                :class="isLoggingOut ? 'fa-spinner fa-spin' : 'fa-right-from-bracket'"
-              ></i>
-
-              <span class="ml-2">
-                {{ isLoggingOut ? 'Logging Out...' : 'Logout' }}
-              </span>
+              <i class="fa-solid" :class="isLoggingOut ? 'fa-spinner fa-spin' : 'fa-right-from-bracket'"></i>
+              <span class="ml-2">{{ isLoggingOut ? 'Logging Out...' : 'Logout' }}</span>
             </button>
-
           </div>
 
         </div>
@@ -138,6 +107,7 @@
 
 
 <script>
+import { useRouter } from 'vue-router'
 import Navbar from '../components/Navbar.vue'
 import Footer from '../components/Footer.vue'
 import api from '../utils/api'
@@ -147,175 +117,83 @@ export default {
 
   name: 'ProfileView',
 
-  components: {
-    Navbar,
-    Footer
-  },
-
-  props: {
-
-    currentView: {
-      type: String,
-      default: 'view-profile'
-    },
-
-    favorites: {
-      type: Array,
-      default: () => []
-    }
-
-  },
+  components: { Navbar, Footer },
 
   data() {
     return {
-
-      user: null,
-
+      currentView     : 'view-profile',
       isQuickSearchOpen: false,
-
-      isLoggingOut: false
-
+      user        : null,
+      isLoggingOut: false,
+      // Wishlist count reaktif dari localStorage
+      favoritesCount: JSON.parse(localStorage.getItem('wishlist') || '[]').length,
     }
   },
 
-  async mounted() {
+  mounted() {
+    this.getProfile()
+    // Sync wishlist count saat berubah
+    window.addEventListener('wishlist-updated', this.syncFavorites)
+  },
 
-    await this.getProfile()
-
+  beforeUnmount() {
+    window.removeEventListener('wishlist-updated', this.syncFavorites)
   },
 
   methods: {
 
-    // ==========================================
-    // NAVIGATION
-    // ==========================================
+    syncFavorites() {
+      this.favoritesCount = JSON.parse(localStorage.getItem('wishlist') || '[]').length
+    },
 
     navigateTo(view) {
-
-      this.$emit('navigate', view)
-
+      const map = {
+        'view-home'      : '/',
+        'view-events'    : '/',
+        'view-favorites' : '/wishlist',
+        'view-my-tickets': '/my-tickets',
+        'view-profile'   : '/profile',
+        'view-pesanan'   : '/pesanan',
+      }
+      if (map[view]) this.$router.push(map[view])
     },
-
 
     filterCategoryQuick(category) {
-
-      this.$emit('filter-category', category)
-
+      this.$router.push({ path: '/', query: { category } })
     },
-
-
-    // ==========================================
-    // GET PROFILE
-    // ==========================================
 
     async getProfile() {
-
       try {
-
         const response = await api.get('/profile')
-
         const data = response.data
-
-        this.user =
-          data.data?.user ||
-          data.data ||
-          data.user ||
-          null
-
+        this.user = data.data?.user || data.data || data.user || null
         if (this.user) {
-
-          localStorage.setItem(
-            'user',
-            JSON.stringify(this.user)
-          )
-
+          localStorage.setItem('user', JSON.stringify(this.user))
         }
-
       } catch (error) {
-
-        console.error(
-          'Gagal mengambil data profile:',
-          error
-        )
-
-        const savedUser =
-          localStorage.getItem('user')
-
+        const savedUser = localStorage.getItem('user')
         if (savedUser) {
-
-          try {
-
-            this.user =
-              JSON.parse(savedUser)
-
-          } catch (parseError) {
-
-            console.error(
-              'Data user localStorage rusak:',
-              parseError
-            )
-
-            this.user = null
-
-          }
-
+          try { this.user = JSON.parse(savedUser) } catch { this.user = null }
         }
-
       }
-
     },
 
-
-    // ==========================================
-    // LOGOUT
-    // ==========================================
-
     async logout() {
-
-      if (this.isLoggingOut) {
-        return
-      }
-
+      if (this.isLoggingOut) return
       this.isLoggingOut = true
-
       try {
-
-        const token =
-          localStorage.getItem('token')
-
-        if (token) {
-
-          await api.post('/logout')
-
-        }
-
+        const token = localStorage.getItem('token')
+        if (token) await api.post('/logout')
       } catch (error) {
-
-        console.error(
-          'Logout API gagal:',
-          error
-        )
-
+        console.error('Logout API gagal:', error)
       } finally {
-
         localStorage.removeItem('token')
-
         localStorage.removeItem('user')
-
         this.user = null
-
         this.isLoggingOut = false
-
-        showHomeFlash(
-          'Kamu telah berhasil logout. Sampai jumpa!',
-          'info',
-          'LOGOUT BERHASIL'
-        )
-
+        showHomeFlash('Kamu telah berhasil logout. Sampai jumpa!', 'info', 'LOGOUT BERHASIL')
         this.$router.push('/')
-
       }
-
     }
 
   }

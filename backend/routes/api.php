@@ -82,7 +82,11 @@ Route::apiResource('tiket', TicketController::class);
 | ORDER / PESANAN
 |--------------------------------------------------------------------------
 */
+Route::post('/orders/auto-cancel', [OrderController::class, 'autoCancelExpired']);
+Route::post('/orders/{id}/cancel', [OrderController::class, 'cancel']);
 Route::apiResource('orders', OrderController::class);
+Route::post('/pesanan/auto-cancel', [OrderController::class, 'autoCancelExpired']);
+Route::post('/pesanan/{id}/cancel', [OrderController::class, 'cancel']);
 Route::apiResource('pesanan', OrderController::class);
 
 /*

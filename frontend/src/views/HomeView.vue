@@ -71,7 +71,7 @@
                   <span>EVENT TERSEDIA</span>
                 </div>
                 <div class="stat-box">
-                  <strong></strong>
+                  <strong>{{ categories.length || '—' }}</strong>
                   <span>KATEGORI</span>
                 </div>
                 <div class="stat-box">
@@ -98,9 +98,9 @@
                   </button>
                 </div>
 
-                <div v-if="events.length" class="popular-event-grid">
+                <div v-if="popularEvents.length" class="popular-event-grid">
                   <article
-                    v-for="(event, index) in events.slice(0, 6)"
+                    v-for="(event, index) in popularEvents"
                     :key="`popular-${event.id}`"
                     class="popular-event-card"
                     :class="{ 'popular-event-card-featured': index === 0 }"
@@ -150,26 +150,32 @@
                   <button @click="filterCategoryQuick('Festival')" class="genre-card">
                     <strong>FESTIVAL</strong>
                     <small>BIG STAGE / CROWD / ALL DAY</small>
+                    <span class="genre-count">{{ categoryEventCounts['Festival'] || 0 }} EVENT</span>
                   </button>
                   <button @click="filterCategoryQuick('Gigs')" class="genre-card">
                     <strong>GIGS</strong>
                     <small>SMALL VENUE / LIVE SESSION</small>
+                    <span class="genre-count">{{ categoryEventCounts['Gigs'] || 0 }} EVENT</span>
                   </button>
                   <button @click="filterCategoryQuick('Indie')" class="genre-card">
                     <strong>INDIE</strong>
                     <small>LOCAL SOUND / NEW WAVE</small>
+                    <span class="genre-count">{{ categoryEventCounts['Indie'] || 0 }} EVENT</span>
                   </button>
                   <button @click="filterCategoryQuick('Rock')" class="genre-card">
                     <strong>ROCK</strong>
                     <small>LOUD / FAST / LIVE</small>
+                    <span class="genre-count">{{ categoryEventCounts['Rock'] || 0 }} EVENT</span>
                   </button>
                   <button @click="filterCategoryQuick('Jazz')" class="genre-card">
                     <strong>JAZZ</strong>
                     <small>SOUL / GROOVE / NIGHT</small>
+                    <span class="genre-count">{{ categoryEventCounts['Jazz'] || 0 }} EVENT</span>
                   </button>
                   <button @click="quickFilterTag('')" class="genre-card genre-yellow">
                     <strong>SEMUA EVENT</strong>
                     <small>EXPLORE FULL CATALOG →</small>
+                    <span class="genre-count">{{ events.length }} EVENT</span>
                   </button>
                 </div>
               </div>
@@ -189,8 +195,8 @@
                   </button>
                 </div>
 
-                <div v-if="events.length" class="upcoming-list">
-                  <article v-for="event in events.slice(0, 6)" :key="`upcoming-${event.id}`" class="upcoming-row">
+                <div v-if="upcomingEvents.length" class="upcoming-list">
+                  <article v-for="event in upcomingEvents" :key="`upcoming-${event.id}`" class="upcoming-row">
                     <div class="upcoming-date">
                       <span>{{ event.date ? new Date(event.date).toLocaleDateString('id-ID', { day: '2-digit' }) : '--' }}</span>
                       <small>{{ event.date ? new Date(event.date).toLocaleDateString('id-ID', { month: 'short' }).toUpperCase() : 'DATE' }}</small>
@@ -743,6 +749,9 @@ favorites: JSON.parse(localStorage.getItem('wishlist') || '[]').map(item => item
         // DATA EVENT DARI BACKEND
         events: [],
 
+        // DATA KATEGORI DARI BACKEND
+        categories: [],
+
         selectedEvent: null,
         selectedTicketTier: null,
 
@@ -837,15 +846,53 @@ favorites: JSON.parse(localStorage.getItem('wishlist') || '[]').map(item => item
         }
 
         return result
-      }
+      },
+
+    // ── COMPUTED: popular events (max 3, sort by stok terjual) ──────────
+    popularEvents() {
+      return [...this.events]
+        .filter(e => !this.isPastEvent(e))
+        .sort((a, b) => {
+          const aStock = a.tickets?.reduce((s, t) => s + Number(t.stock ?? t.stok ?? 0), 0) ?? 999
+          const bStock = b.tickets?.reduce((s, t) => s + Number(t.stock ?? t.stok ?? 0), 0) ?? 999
+          return aStock - bStock
+        })
+        .slice(0, 3)
     },
 
-    async mounted() {
+    // ── COMPUTED: upcoming events (5 terdekat dari hari ini) ────────────
+    upcomingEvents() {
+      const today = new Date(); today.setHours(0, 0, 0, 0)
+      return [...this.events]
+        .filter(e => {
+          if (!e.date) return false
+          const d = new Date(e.date); d.setHours(0, 0, 0, 0)
+          return d >= today
+        })
+        .sort((a, b) => new Date(a.date) - new Date(b.date))
+        .slice(0, 5)
+    },
+
+    // ── COMPUTED: jumlah event per kategori ─────────────────────────────
+    categoryEventCounts() {
+      const counts = {}
+      this.events.forEach(e => {
+        const cat = e.category || 'Lainnya'
+        counts[cat] = (counts[cat] || 0) + 1
+      })
+      return counts
+    }
+  },
+
+  async mounted() {
       // Load user dari localStorage
       this.loadUser()
 
       // Ambil event dari backend ketika website dibuka
       await this.getEvents()
+
+      // Ambil kategori untuk section genre
+      this.getCategories()
 
       // Cek apakah user sudah login
       if (this.isLoggedIn) {
@@ -1084,6 +1131,20 @@ async getEvents() {
       // GET DETAIL EVENT
       // GET /api/events/{id}
       // ==========================================
+
+      // ==========================================
+      // GET KATEGORI DARI BACKEND
+      // GET /api/categories
+      // ==========================================
+
+      async getCategories() {
+        try {
+          const response = await api.get('/categories')
+          this.categories = response.data.data || response.data || []
+        } catch (error) {
+          console.error('Gagal mengambil kategori:', error)
+        }
+      },
 
       openEventDetail(eventId) {
         if (eventId) {
@@ -1369,6 +1430,13 @@ async getEvents() {
         if (!this.isLoggedIn) {
           showFlash('Silakan login terlebih dahulu untuk membeli tiket.', 'warning', 'LOGIN DIPERLUKAN')
           this.navigateTo('view-login')
+          return
+        }
+
+        // Cek stok tiket — flash jika habis
+        const stok = Number(ticket.stock ?? ticket.stok ?? 0)
+        if (stok <= 0) {
+          showFlash(`Tiket "${ticket.name || ticket.nama_tiket}" sudah habis. Silakan pilih tiket lain.`, 'error', 'TIKET HABIS')
           return
         }
 
@@ -2500,11 +2568,11 @@ async getEvents() {
   .event-card-footer button { padding: 6px 9px; background: #111; color: #fff; border: 2px solid #111; font-size: 9px; font-weight: 900; cursor: pointer; }
 
   .genre-grid { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 2px solid #111; border-left: 2px solid #111; }
-  .genre-card { min-height: 155px; padding: 18px; text-align: left; background: rgba(255,255,255,.78); border-right: 2px solid #111; border-bottom: 2px solid #111; cursor: pointer; transition: background .15s ease, transform .15s ease; }
+  .genre-card { min-height: 155px; padding: 18px; text-align: left; background: rgba(255,255,255,.78); border-right: 2px solid #111; border-bottom: 2px solid #111; cursor: pointer; transition: background .15s ease, transform .15s ease; display: flex; flex-direction: column; }
   .genre-card:hover { background: #fff; transform: translate(-2px,-2px); }
-  .genre-card span { display: block; font-size: 10px; font-weight: 900; margin-bottom: 34px; }
   .genre-card strong { display: block; font-size: clamp(1.4rem, 3vw, 2.3rem); line-height: .9; font-weight: 900; }
-  .genre-card small { display: block; margin-top: 8px; color: #666; font-size: 8px; font-weight: 900; letter-spacing: .08em; }
+  .genre-card small { display: block; margin-top: 8px; color: #666; font-size: 8px; font-weight: 900; letter-spacing: .08em; flex: 1; }
+  .genre-count { display: inline-block; margin-top: 12px; font-size: 9px; font-weight: 900; letter-spacing: .12em; color: #111; background: #F2C94C; border: 1px solid #111; padding: 2px 8px; width: fit-content; }
   .genre-yellow { background: #F2C94C; }
   .genre-dark { background: #111; color: #fff; }
   .genre-dark small { color: #bbb; }

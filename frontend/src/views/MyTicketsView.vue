@@ -627,6 +627,7 @@ import {
   computed,
   nextTick,
   onMounted,
+  onUnmounted,
   watch
 } from 'vue'
 
@@ -704,7 +705,21 @@ const openedTickets = ref([])
 
 const currentView = ref('view-my-tickets')
 
-const wishlist = ref([])
+// Wishlist — ambil dari localStorage dan sync saat berubah
+const wishlist = ref(JSON.parse(localStorage.getItem('wishlist') || '[]'))
+
+const syncWishlist = () => {
+  wishlist.value = JSON.parse(localStorage.getItem('wishlist') || '[]')
+}
+
+onMounted(() => {
+  window.addEventListener('wishlist-updated', syncWishlist)
+  getTickets()
+})
+
+onUnmounted(() => {
+  window.removeEventListener('wishlist-updated', syncWishlist)
+})
 
 
 /*
@@ -1468,11 +1483,5 @@ watch(
 | MOUNT
 |--------------------------------------------------------------------------
 */
-
-onMounted(() => {
-
-  getTickets()
-
-})
 
 </script>

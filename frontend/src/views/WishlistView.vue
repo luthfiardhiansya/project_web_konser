@@ -6,7 +6,7 @@
       :currentView="currentView"
       :favoritesCount="wishlist.length"
       @navigate="navigateTo"
-      @open-search="$emit('open-search')"
+      @open-search="$router.push('/')"
       @filter-category="filterCategoryQuick"
     />
 
@@ -247,6 +247,7 @@
 
 
 <script>
+import { useRouter } from 'vue-router'
 import Navbar from '../components/Navbar.vue'
 import Footer from '../components/Footer.vue'
 import { showHomeFlash } from '../utils/flash'
@@ -255,303 +256,104 @@ export default {
 
   name: 'WishlistView',
 
-  components: {
-    Navbar,
-    Footer
-  },
-
-  props: {
-
-    currentView: {
-      type: String,
-      default: 'view-wishlist'
-    },
-
-    favorites: {
-      type: Array,
-      default: () => []
-    }
-
-  },
+  components: { Navbar, Footer },
 
   data() {
-
     return {
-
-      wishlist: []
-
+      currentView: 'view-wishlist',
+      wishlist   : [],
     }
-
   },
-
 
   mounted() {
-
     this.loadWishlist()
-
-    window.addEventListener(
-      'wishlist-updated',
-      this.loadWishlist
-    )
-
+    window.addEventListener('wishlist-updated', this.loadWishlist)
   },
-
 
   beforeUnmount() {
-
-    window.removeEventListener(
-      'wishlist-updated',
-      this.loadWishlist
-    )
-
+    window.removeEventListener('wishlist-updated', this.loadWishlist)
   },
-
 
   methods: {
 
-    // ==========================================
-    // CEK APAKAH EVENT SUDAH LEWAT TANGGAL
-    // ==========================================
+    // ──────────────────────────────────────────────────
+    // NAVIGATION — pakai $router langsung, tidak emit
+    // ──────────────────────────────────────────────────
+    navigateTo(view) {
+      const map = {
+        'view-home'      : '/',
+        'view-events'    : '/',
+        'view-favorites' : '/wishlist',
+        'view-my-tickets': '/my-tickets',
+        'view-profile'   : '/profile',
+        'view-pesanan'   : '/pesanan',
+      }
+      if (map[view]) this.$router.push(map[view])
+    },
+
+    filterCategoryQuick(category) {
+      this.$router.push({ path: '/', query: { category } })
+    },
 
     isPastEvent(event) {
       const dateStr = event.tanggal || event.date
       if (!dateStr) return false
-      const today = new Date()
-      today.setHours(0, 0, 0, 0)
-      const eventDate = new Date(dateStr)
-      eventDate.setHours(0, 0, 0, 0)
+      const today = new Date(); today.setHours(0,0,0,0)
+      const eventDate = new Date(dateStr); eventDate.setHours(0,0,0,0)
       return eventDate < today
     },
 
-
-    // ==========================================
-    // AMBIL HARGA TERENDAH DARI EVENT
-    // Data wishlist bisa simpan field berbeda
-    // tergantung dari mana event di-save
-    // ==========================================
-
     getMinPrice(event) {
-      // Jika ada field minPrice (dari HomeView mapping)
-      if (event.minPrice !== undefined && event.minPrice !== null) {
-        return event.minPrice
-      }
-      // Jika ada array tickets, ambil harga minimum
+      if (event.minPrice !== undefined && event.minPrice !== null) return event.minPrice
       if (Array.isArray(event.tickets) && event.tickets.length > 0) {
-        const prices = event.tickets.map(t => Number(t.harga || t.price || 0))
-        return Math.min(...prices)
+        return Math.min(...event.tickets.map(t => Number(t.harga || t.price || 0)))
       }
-      // Fallback ke field harga / price langsung
       return event.harga || event.price || null
     },
 
-
-    // ==========================================
-    // LOAD WISHLIST
-    // ==========================================
-
     loadWishlist() {
-
       try {
-
-        const saved =
-          localStorage.getItem('wishlist')
-
-        this.wishlist =
-          saved
-            ? JSON.parse(saved)
-            : []
-
-      } catch (error) {
-
-        console.error(
-          'Gagal membaca wishlist:',
-          error
-        )
-
-        this.wishlist = []
-
-      }
-
+        const saved = localStorage.getItem('wishlist')
+        this.wishlist = saved ? JSON.parse(saved) : []
+      } catch { this.wishlist = [] }
     },
-
-
-    // ==========================================
-    // REMOVE
-    // ==========================================
 
     removeFromWishlist(id) {
-
       const event = this.wishlist.find(e => e.id === id)
       const eventName = event?.nama_event || event?.name || 'Event'
-
-      this.wishlist =
-        this.wishlist.filter(
-          event => event.id !== id
-        )
-
+      this.wishlist = this.wishlist.filter(e => e.id !== id)
       this.saveWishlist()
-
-      showHomeFlash(
-        `${eventName} dihapus dari wishlist.`,
-        'info',
-        'WISHLIST DIPERBARUI'
-      )
-
+      showHomeFlash(`${eventName} dihapus dari wishlist.`, 'info', 'WISHLIST DIPERBARUI')
     },
-
-
-    // ==========================================
-    // CLEAR
-    // ==========================================
 
     clearWishlist() {
-
-      if (this.wishlist.length === 0) {
-        return
-      }
-
-      const confirmed =
-        window.confirm(
-          'Hapus semua event dari wishlist?'
-        )
-
-      if (!confirmed) {
-        return
-      }
-
+      if (!this.wishlist.length) return
+      if (!confirm('Hapus semua event dari wishlist?')) return
       const jumlah = this.wishlist.length
-
       this.wishlist = []
-
       this.saveWishlist()
-
-      showHomeFlash(
-        `${jumlah} event berhasil dihapus dari wishlist.`,
-        'info',
-        'WISHLIST DIKOSONGKAN'
-      )
-
+      showHomeFlash(`${jumlah} event berhasil dihapus dari wishlist.`, 'info', 'WISHLIST DIKOSONGKAN')
     },
-
-
-    // ==========================================
-    // SAVE
-    // ==========================================
 
     saveWishlist() {
-
-      localStorage.setItem(
-        'wishlist',
-        JSON.stringify(this.wishlist)
-      )
-
-      window.dispatchEvent(
-        new Event('wishlist-updated')
-      )
-
+      localStorage.setItem('wishlist', JSON.stringify(this.wishlist))
+      window.dispatchEvent(new Event('wishlist-updated'))
     },
 
-
-    // ==========================================
-    // EVENT DETAIL
-    // ==========================================
-
-    openEvent(id) {
-
-      this.$router.push(
-        `/event/${id}`
-      )
-
-    },
-
-
-    // ==========================================
-    // NAVIGATION
-    // ==========================================
-
-    navigateTo(view) {
-
-      this.$emit(
-        'navigate',
-        view
-      )
-
-    },
-
-
-    filterCategoryQuick(category) {
-
-      this.$emit(
-        'filter-category',
-        category
-      )
-
-    },
-
-
-    // ==========================================
-    // FORMAT PRICE
-    // ==========================================
+    openEvent(id) { this.$router.push(`/event/${id}`) },
 
     formatPrice(price) {
-
-      if (
-        price === null ||
-        price === undefined ||
-        price === ''
-      ) {
-        return 'Gratis'
-      }
-
-      const number =
-        Number(price)
-
-      if (Number.isNaN(number)) {
-        return price
-      }
-
-      return new Intl.NumberFormat(
-        'id-ID',
-        {
-          style: 'currency',
-          currency: 'IDR',
-          maximumFractionDigits: 0
-        }
-      ).format(number)
-
+      if (price === null || price === undefined || price === '') return 'Gratis'
+      const number = Number(price)
+      if (Number.isNaN(number)) return price
+      return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(number)
     },
 
-
-    // ==========================================
-    // FORMAT DATE
-    // ==========================================
-
     formatDate(date) {
-
-      if (!date) {
-        return '-'
-      }
-
-      const parsed =
-        new Date(date)
-
-      if (
-        Number.isNaN(
-          parsed.getTime()
-        )
-      ) {
-        return date
-      }
-
-      return parsed.toLocaleDateString(
-        'id-ID',
-        {
-          day: '2-digit',
-          month: 'short',
-          year: 'numeric'
-        }
-      )
-
+      if (!date) return '-'
+      const parsed = new Date(date)
+      if (Number.isNaN(parsed.getTime())) return date
+      return parsed.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })
     }
 
   }

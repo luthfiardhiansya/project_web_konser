@@ -193,4 +193,76 @@ class OrderController extends Controller
             'message' => 'Order berhasil dihapus',
         ]);
     }
+
+    /**
+     * Batalkan pesanan oleh user sendiri + kembalikan stok tiket.
+     * POST /api/orders/{id}/cancel
+     */
+    public function cancel(string $id)
+    {
+        $order = Order::with('orderDetails.ticket')->find($id);
+
+        if (!$order) {
+            return response()->json([
+                'status'  => false,
+                'message' => 'Order tidak ditemukan.',
+            ], 404);
+        }
+
+        if ($order->status !== 'pending') {
+            return response()->json([
+                'status'  => false,
+                'message' => 'Hanya pesanan berstatus pending yang bisa dibatalkan.',
+            ], 422);
+        }
+
+        DB::transaction(function () use ($order) {
+            // Kembalikan stok tiket
+            foreach ($order->orderDetails as $detail) {
+                if ($detail->ticket) {
+                    $detail->ticket->increment('stok', $detail->jumlah);
+                }
+            }
+
+            $order->update(['status' => 'dibatalkan']);
+        });
+
+        return response()->json([
+            'status'  => true,
+            'message' => 'Pesanan berhasil dibatalkan dan stok tiket telah dikembalikan.',
+            'data'    => $order->fresh(),
+        ]);
+    }
+
+    /**
+     * Auto-cancel pesanan pending yang sudah lebih dari 30 menit.
+     * POST /api/orders/auto-cancel  (bisa dipanggil dari cron / frontend)
+     */
+    public function autoCancelExpired()
+    {
+        $expiredOrders = Order::with('orderDetails.ticket')
+            ->where('status', 'pending')
+            ->where('created_at', '<', now()->subMinutes(30))
+            ->get();
+
+        $cancelledCount = 0;
+
+        foreach ($expiredOrders as $order) {
+            DB::transaction(function () use ($order) {
+                foreach ($order->orderDetails as $detail) {
+                    if ($detail->ticket) {
+                        $detail->ticket->increment('stok', $detail->jumlah);
+                    }
+                }
+                $order->update(['status' => 'dibatalkan']);
+            });
+            $cancelledCount++;
+        }
+
+        return response()->json([
+            'status'  => true,
+            'message' => "{$cancelledCount} pesanan expired telah dibatalkan.",
+            'count'   => $cancelledCount,
+        ]);
+    }
 }

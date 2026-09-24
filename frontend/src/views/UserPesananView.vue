@@ -329,12 +329,31 @@
                 Detail Pesanan
               </button>
 
+              <!-- COUNTDOWN TIMER untuk pesanan pending -->
+              <span
+                v-if="order.status === 'pending'"
+                class="text-xs font-black uppercase px-3 py-2 border-2"
+                :class="isExpiringSoon(order) ? 'border-red-500 bg-red-100 text-red-700 animate-pulse' : 'border-yellow-500 bg-yellow-50 text-yellow-700'"
+              >
+                ⏱ {{ formatCountdown(order) }}
+              </span>
+
               <button
                 v-if="order.status === 'pending'"
                 @click="bayarSekarang(order)"
                 class="border-2 border-black bg-[#FFD84D] px-4 py-2 text-xs font-black uppercase hover:brightness-95 transition-all shadow-[3px_3px_0_#000]"
               >
-                 Bayar Sekarang
+                💳 Bayar Sekarang
+              </button>
+
+              <button
+                v-if="order.status === 'pending'"
+                @click="batalkanPesanan(order)"
+                :disabled="cancelling === order.id"
+                class="border-2 border-red-500 bg-red-50 px-4 py-2 text-xs font-black uppercase text-red-700 hover:bg-red-500 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <svg v-if="cancelling === order.id" class="inline animate-spin mr-1" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.09"/></svg>
+                {{ cancelling === order.id ? 'Membatalkan...' : '✕ Batalkan' }}
               </button>
             </div>
           </div>
@@ -463,6 +482,14 @@
         <div class="px-5 pb-5 flex flex-wrap justify-end gap-2">
           <button
             v-if="selectedOrder.status === 'pending'"
+            @click="batalkanPesanan(selectedOrder); selectedOrder = null"
+            :disabled="cancelling === selectedOrder.id"
+            class="border-4 border-red-500 bg-red-50 px-5 py-2.5 text-sm font-black uppercase text-red-700 shadow-[4px_4px_0_#ef4444] hover:bg-red-500 hover:text-white hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all disabled:opacity-50"
+          >
+            ✕ Batalkan Pesanan
+          </button>
+          <button
+            v-if="selectedOrder.status === 'pending'"
             @click="bayarSekarang(selectedOrder); selectedOrder = null"
             class="border-4 border-black bg-[#FFD84D] px-5 py-2.5 text-sm font-black uppercase shadow-[4px_4px_0_#000] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all"
           >
@@ -482,7 +509,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '../utils/api'
 import { showHomeFlash } from '../utils/flash'
@@ -492,7 +519,7 @@ import Footer from '../components/Footer.vue'
 const router = useRouter()
 
 // ── Navbar state ──────────────────────────────────────────────────────────────
-const currentView     = ref('view-pesanan')
+const currentView       = ref('view-pesanan')
 const isQuickSearchOpen = ref(false)
 const quickSearchQuery  = ref('')
 const favorites = ref(
@@ -501,41 +528,75 @@ const favorites = ref(
 
 const navigateTo = (view) => {
   const map = {
-    'view-home'     : '/',
-    'view-events'   : '/',
-    'view-favorites': '/wishlist',
+    'view-home'      : '/',
+    'view-events'    : '/',
+    'view-favorites' : '/wishlist',
     'view-my-tickets': '/my-tickets',
-    'view-profile'  : '/profile',
-    'view-pesanan'  : '/pesanan',
+    'view-profile'   : '/profile',
+    'view-pesanan'   : '/pesanan',
   }
   if (map[view]) router.push(map[view])
 }
 
-const filterCategoryQuick = () => {}
+const filterCategoryQuick = (cat) => {
+  router.push({ path: '/', query: { category: cat } })
+}
 
-// ── Wishlist sync ─────────────────────────────────────────────────────────────
+// Wishlist sync
 const syncWishlist = () => {
   favorites.value = JSON.parse(localStorage.getItem('wishlist') || '[]').map(i => i.id)
 }
 window.addEventListener('wishlist-updated', syncWishlist)
 
 // ── Data ─────────────────────────────────────────────────────────────────────
-const orders  = ref([])
-const loading = ref(true)
-const error   = ref('')
+const orders        = ref([])
+const loading       = ref(true)
+const error         = ref('')
 const selectedOrder = ref(null)
+const cancelling    = ref(null) // id order yang sedang dibatalkan
+
+// ── Countdown timer ───────────────────────────────────────────────────────────
+const now        = ref(Date.now())
+let   timerInterval = null
+
+const startTimer = () => {
+  timerInterval = setInterval(() => {
+    now.value = Date.now()
+    // Cek apakah ada order pending yang sudah expired — auto-refresh
+    const hasExpired = orders.value.some(o =>
+      o.status === 'pending' && getRemainingMs(o) <= 0
+    )
+    if (hasExpired) fetchOrders()
+  }, 1000)
+}
+
+const getRemainingMs = (order) => {
+  const created = new Date(order.created_at).getTime()
+  const expire  = created + 30 * 60 * 1000 // 30 menit
+  return Math.max(0, expire - now.value)
+}
+
+const formatCountdown = (order) => {
+  const ms = getRemainingMs(order)
+  if (ms === 0) return 'KEDALUWARSA'
+  const m = Math.floor(ms / 60000)
+  const s = Math.floor((ms % 60000) / 1000)
+  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+}
+
+const isExpiringSoon = (order) => {
+  const ms = getRemainingMs(order)
+  return ms > 0 && ms < 5 * 60 * 1000 // < 5 menit
+}
 
 // ── Filter & search ───────────────────────────────────────────────────────────
-const searchQuery   = ref('')
-const filterStatus  = ref('')
+const searchQuery    = ref('')
+const filterStatus   = ref('')
 const filterDateFrom = ref('')
 const filterDateTo   = ref('')
+const currentPage    = ref(1)
+const perPage        = 5
 
-// ── Pagination ────────────────────────────────────────────────────────────────
-const currentPage = ref(1)
-const perPage     = 5
-
-// Reset halaman saat filter berubah
 watch([searchQuery, filterStatus, filterDateFrom, filterDateTo], () => {
   currentPage.value = 1
 })
@@ -545,6 +606,9 @@ const fetchOrders = async () => {
   loading.value = true
   error.value   = ''
   try {
+    // Panggil auto-cancel dulu supaya pesanan expired langsung terbatalkan
+    await api.post('/orders/auto-cancel').catch(() => {})
+
     const user   = JSON.parse(localStorage.getItem('user') || '{}')
     const params = user.id ? { user_id: user.id } : {}
     const res    = await api.get('/orders', { params })
@@ -560,7 +624,15 @@ const fetchOrders = async () => {
   }
 }
 
-onMounted(fetchOrders)
+onMounted(() => {
+  fetchOrders()
+  startTimer()
+})
+
+onUnmounted(() => {
+  clearInterval(timerInterval)
+  window.removeEventListener('wishlist-updated', syncWishlist)
+})
 
 // ── Computed ─────────────────────────────────────────────────────────────────
 const filtered = computed(() => {
@@ -650,8 +722,20 @@ const statusClass = (s) => ({
 }[s] || 'bg-gray-200')
 
 // ── Actions ───────────────────────────────────────────────────────────────────
-const openDetail = (order) => {
-  selectedOrder.value = order
+const openDetail = (order) => { selectedOrder.value = order }
+
+const batalkanPesanan = async (order) => {
+  if (!confirm(`Batalkan pesanan ${order.kode_pesanan}? Stok tiket akan dikembalikan.`)) return
+  cancelling.value = order.id
+  try {
+    await api.post(`/orders/${order.id}/cancel`)
+    showHomeFlash('Pesanan berhasil dibatalkan dan stok tiket dikembalikan.', 'success', 'PESANAN DIBATALKAN')
+    fetchOrders()
+  } catch (err) {
+    showHomeFlash(err.response?.data?.message || 'Gagal membatalkan pesanan.', 'error', 'GAGAL')
+  } finally {
+    cancelling.value = null
+  }
 }
 
 const bayarSekarang = async (order) => {
@@ -685,17 +769,12 @@ const bayarSekarang = async (order) => {
       },
       onError: async () => {
         try {
-          await api.post('/payments/finish', {
-            order_id: order.id,
-            status: 'gagal'
-          })
+          await api.post('/payments/finish', { order_id: order.id, status: 'gagal' })
         } catch (e) {}
         showHomeFlash('Pembayaran gagal atau dibatalkan.', 'error', 'PEMBAYARAN GAGAL')
         fetchOrders()
       },
-      onClose: () => {
-        fetchOrders()
-      }
+      onClose: () => { fetchOrders() }
     })
   } catch (err) {
     showHomeFlash(
