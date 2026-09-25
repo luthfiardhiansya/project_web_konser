@@ -22,6 +22,10 @@ const props = defineProps({
   address: {
     type: String,
     default: ''
+  },
+  openGoogleMapsOnClick: {
+    type: Boolean,
+    default: false
   }
 })
 
@@ -42,6 +46,21 @@ const customIcon = L.icon({
   shadowSize: [41, 41]
 })
 
+const openGoogleMaps = () => {
+  const hasCoords = props.latitude && props.longitude && !isNaN(props.latitude) && !isNaN(props.longitude)
+  const query = hasCoords
+    ? `${Number(props.latitude)},${Number(props.longitude)}`
+    : [props.venue, props.address].filter(Boolean).join(', ')
+
+  if (!query) return
+
+  window.open(
+    `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`,
+    '_blank',
+    'noopener,noreferrer'
+  )
+}
+
 const initMap = () => {
   if (!mapContainer.value) return
 
@@ -61,6 +80,14 @@ const initMap = () => {
   }).addTo(map)
 
   marker = L.marker([lat, lng], { icon: customIcon }).addTo(map)
+
+  if (props.openGoogleMapsOnClick) {
+    map.on('click', openGoogleMaps)
+    marker.on('click', (event) => {
+      L.DomEvent.stopPropagation(event.originalEvent)
+      openGoogleMaps()
+    })
+  }
 
   const popupContent = `
     <div style="font-family: sans-serif; font-size: 13px; line-height: 1.4; padding: 2px;">
@@ -97,7 +124,16 @@ watch(() => [props.latitude, props.longitude], () => {
       <span v-if="venue" class="text-xs font-bold text-muted">{{ venue }}</span>
     </div>
 
-    <div ref="mapContainer" class="event-map-container"></div>
+    <div
+      ref="mapContainer"
+      class="event-map-container"
+      :class="{ 'is-clickable': openGoogleMapsOnClick }"
+      :title="openGoogleMapsOnClick ? 'Klik untuk membuka lokasi di Google Maps' : undefined"
+    ></div>
+    <div v-if="openGoogleMapsOnClick" class="map-link-hint">
+      <i class="fa-solid fa-arrow-up-right-from-square"></i>
+      Klik peta untuk membuka Google Maps
+    </div>
   </div>
 </template>
 
@@ -123,6 +159,20 @@ watch(() => [props.latitude, props.longitude], () => {
   width: 100%;
   height: 280px;
   z-index: 1;
+}
+
+.event-map-container.is-clickable {
+  cursor: pointer;
+}
+
+.map-link-hint {
+  padding: 8px 12px;
+  border-top: 2px solid #111;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  text-align: center;
+  background: #f5f5f5;
 }
 
 @media (max-width: 640px) {

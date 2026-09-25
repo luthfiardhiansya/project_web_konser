@@ -92,6 +92,7 @@
             :title="event.nama_event"
             :venue="event.lokasi"
             :address="event.alamat"
+            :open-google-maps-on-click="true"
           />
         </div>
 
