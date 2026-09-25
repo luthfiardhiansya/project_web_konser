@@ -106,7 +106,6 @@
                   >
                     <div class="event-card-image-wrap">
                       <img :src="event.image" :alt="event.title" class="event-card-image">
-                      <span class="event-number">0{{ index + 1 }}</span>
                       <button
                         @click="toggleFavorite(event)"
                         :data-favorite-id="event.id"
@@ -233,7 +232,7 @@
       </h2>
 
       <p>
-        Lokasi Veberapa Vanue Di Bandung
+        Lokasi Beberapa Vanue Di Bandung
       </p>
     </div>
 
@@ -470,6 +469,15 @@
                 <h3 class="font-black text-xl uppercase">Deskripsi Event</h3>
                 <p class="text-sm leading-relaxed font-medium text-ink/90">{{ selectedEvent.description }}</p>
               </div>
+
+              <!-- EVENT MAP LOCATION -->
+              <EventMap
+                :latitude="selectedEvent.latitude"
+                :longitude="selectedEvent.longitude"
+                :title="selectedEvent.title"
+                :venue="selectedEvent.venue"
+                :address="selectedEvent.address"
+              />
             </div>
 
             <!-- TICKET TIER SELECTION -->
@@ -695,6 +703,7 @@
   import api from '../utils/api'
   import Navbar from '../components/Navbar.vue'
   import Footer from '../components/Footer.vue'
+  import EventMap from '../components/EventMap.vue'
   import { showFlash } from '../utils/flash'
 
   export default {
@@ -702,7 +711,8 @@
 
     components: {
       Navbar,
-      Footer
+      Footer,
+      EventMap
     },
 
     data() {
@@ -1089,6 +1099,10 @@ async getEvents() {
       location: event.lokasi,
 
       address: event.alamat,
+
+      latitude: event.latitude,
+
+      longitude: event.longitude,
 
       image:
         event.poster ||
@@ -2386,7 +2400,6 @@ async getEvents() {
     top: 12px;
     left: 14px;
     right: 14px;
-    inset-bottom: auto;
   }
 
   .navbar-home-layer.navbar-scrolled :deep(> *) {

@@ -359,6 +359,26 @@ const scanResult = ref(null)
 let scanner = null
 let isProcessing = false
 
+const getCurrentLocation = () => new Promise((resolve, reject) => {
+  if (!navigator.geolocation) {
+    reject(new Error('Lokasi perangkat tidak tersedia.'))
+    return
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    (position) => resolve({
+      latitude: position.coords.latitude,
+      longitude: position.coords.longitude
+    }),
+    () => reject(new Error('Lokasi perangkat tidak dapat diakses.')),
+    {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 0
+    }
+  )
+})
+
 
 /* =========================================
    SOUND SUCCESS
@@ -510,10 +530,14 @@ const startScanner = async () => {
              KIRIM QR KE BACKEND
           ================================= */
 
+          const location = await getCurrentLocation()
+
           const response = await api.post(
             '/scanner/scan',
             {
-              qr_token: decodedText
+              qr_token: decodedText,
+              latitude: location.latitude,
+              longitude: location.longitude
             }
           )
 
@@ -551,6 +575,7 @@ const startScanner = async () => {
 
           message.value =
             error.response?.data?.message ||
+            error.message ||
             'Gagal memproses QR Ticket.'
 
           scanResult.value =
@@ -561,7 +586,7 @@ const startScanner = async () => {
 
           /* FLASH — bedakan pesan sesuai status */
           const errStatus = error.response?.status
-          const errMsg    = error.response?.data?.message || 'Gagal memproses QR Ticket.'
+          const errMsg    = error.response?.data?.message || error.message || 'Gagal memproses QR Ticket.'
 
           if (errStatus === 409) {
             showHomeFlash(

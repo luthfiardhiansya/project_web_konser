@@ -32,15 +32,22 @@ class MidtransController extends Controller
         Config::$is3ds = true;
 
         $params = [
-            'transaction_details' => [
-                'order_id' => $order->kode_pesanan.'-'.time(),
-                'gross_amount' => (int) $order->total_harga,
-            ],
-            'customer_details' => [
-                'first_name' => $order->user->name ?? 'Customer',
-                'email' => $order->user->email ?? 'customer@example.com',
-            ],
-        ];
+    'transaction_details' => [
+        'order_id' => $order->kode_pesanan.'-'.time(),
+        'gross_amount' => (int) $order->total_harga,
+    ],
+
+    'customer_details' => [
+        'first_name' => $order->user->name ?? 'Customer',
+        'email' => $order->user->email ?? 'customer@example.com',
+    ],
+
+    'expiry' => [
+        'start_time' => now()->format('Y-m-d H:i:s O'),
+        'unit' => 'minute',
+        'duration' => 30,
+    ],
+];
 
         try {
             $snapToken = Snap::getSnapToken($params);

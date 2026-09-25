@@ -5,6 +5,8 @@ import api from '../../utils/api'
 import { showFlash } from '../../utils/flash'
 import { useExcelExport } from '../../composables/useExcelExport'
 
+import LocationPicker from '../../components/LocationPicker.vue'
+
 const { exportExcel, exporting } = useExcelExport()
 
 const events = ref([])
@@ -22,6 +24,11 @@ const form = ref({
   waktu: '',
   lokasi: '',
   alamat: '',
+  latitude: -6.9175,
+  longitude: 107.6191,
+  scan_latitude: -6.9175,
+  scan_longitude: 107.6191,
+  radius_checkin: 30,
   poster: '',
   status: 'aktif'
 })
@@ -249,6 +256,11 @@ const openAddForm = () => {
     waktu: '19:00',
     lokasi: '',
     alamat: '',
+    latitude: -6.9175,
+    longitude: 107.6191,
+    scan_latitude: -6.9175,
+    scan_longitude: 107.6191,
+    radius_checkin: 30,
     poster: '',
     status: 'aktif'
   }
@@ -260,10 +272,24 @@ const openEditForm = (eventItem) => {
   isEdit.value = true
   form.value = {
     ...eventItem,
-    category_id: eventItem.category_id || eventItem.category?.id || ''
+    category_id: eventItem.category_id || eventItem.category?.id || '',
+    latitude: eventItem.latitude ? Number(eventItem.latitude) : -6.9175,
+    longitude: eventItem.longitude ? Number(eventItem.longitude) : 107.6191,
+    scan_latitude: eventItem.scan_latitude ?? eventItem.latitude ?? -6.9175,
+    scan_longitude: eventItem.scan_longitude ?? eventItem.longitude ?? 107.6191,
+    radius_checkin: eventItem.radius_checkin ?? 30
   }
   resetPosterState(eventItem.poster || '')
   showForm.value = true
+}
+
+const handleLocationSelect = (loc) => {
+  if (!loc || loc.type !== 'venue') return
+
+  if (loc.lat !== undefined) form.value.latitude = loc.lat
+  if (loc.lng !== undefined) form.value.longitude = loc.lng
+  if (loc.name) form.value.lokasi = loc.name
+  if (loc.address) form.value.alamat = loc.address
 }
 
 const saveEvent = async () => {
@@ -560,9 +586,29 @@ const handleExportExcel = () => {
 
             <div class="form-row mb-3">
               <div class="form-group flex-1">
-                <label class="form-label">Lokasi / Venue</label>
-                <input type="text" v-model="form.lokasi" class="form-control" placeholder="Contoh: Gudang Selatan, Bandung" required>
+                <label class="form-label">Nama Lokasi / Venue</label>
+                <input type="text" v-model="form.lokasi" class="form-control mb-2" placeholder="Contoh: Gudang Selatan, Bandung" required>
               </div>
+              <div class="form-group flex-1">
+                <label class="form-label">Alamat Lengkap (Opsional)</label>
+                <input type="text" v-model="form.alamat" class="form-control mb-2" placeholder="Contoh: Jl. Gudang Selatan No.22, Merdeka">
+              </div>
+            </div>
+
+            <div class="form-group mb-4">
+              <label class="form-label font-bold flex items-center gap-1">
+                <span>📍 Pilih Titik Lokasi Peta (Map Picker)</span>
+              </label>
+              <LocationPicker
+                :venue-name="form.lokasi"
+                :venue-address="form.alamat"
+                v-model:venueLatitude="form.latitude"
+                v-model:venueLongitude="form.longitude"
+                v-model:scanLatitude="form.scan_latitude"
+                v-model:scanLongitude="form.scan_longitude"
+                v-model:radius="form.radius_checkin"
+                @select-location="handleLocationSelect"
+              />
             </div>
 
             <!-- ── POSTER SECTION ──────────────────────────────────── -->

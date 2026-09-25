@@ -84,6 +84,15 @@
             <h3 class="font-black text-xl uppercase border-b-2 border-ink pb-2">Deskripsi Event</h3>
             <p class="text-sm leading-relaxed font-medium text-ink/90 whitespace-pre-line">{{ event.deskripsi }}</p>
           </div>
+
+          <!-- EVENT MAP LOCATION -->
+          <EventMap
+            :latitude="event.latitude"
+            :longitude="event.longitude"
+            :title="event.nama_event"
+            :venue="event.lokasi"
+            :address="event.alamat"
+          />
         </div>
 
         <!-- RIGHT COLUMN: TICKET SELECTION & CHECKOUT -->
@@ -229,6 +238,7 @@ import { useRoute, useRouter } from 'vue-router'
 import api from '../utils/api'
 import Navbar from '../components/Navbar.vue'
 import Footer from '../components/Footer.vue'
+import EventMap from '../components/EventMap.vue'
 import { showFlash } from '../utils/flash'
 
 const route = useRoute()

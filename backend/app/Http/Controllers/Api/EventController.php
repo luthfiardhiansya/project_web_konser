@@ -30,11 +30,40 @@ class EventController extends Controller
             'deskripsi' => 'required|string',
             'tanggal' => 'required|date',
             'waktu' => 'required',
+
             'lokasi' => 'required|string|max:255',
             'alamat' => 'nullable|string|max:255',
+
+            // Lokasi venue utama
+            'latitude' => 'nullable|numeric|between:-90,90',
+            'longitude' => 'nullable|numeric|between:-180,180',
+
+            // Lokasi khusus scan/check-in
+            'scan_latitude' => 'nullable|numeric|between:-90,90',
+            'scan_longitude' => 'nullable|numeric|between:-180,180',
+
+            // Radius check-in dalam meter
+            'radius_checkin' => 'nullable|integer|min:1',
+
             'poster' => 'nullable|string|max:255',
             'status' => 'nullable|in:aktif,selesai,dibatalkan',
         ]);
+
+        /*
+        |--------------------------------------------------------------------------
+        | Jika lokasi scan tidak dikirim
+        |--------------------------------------------------------------------------
+        | Otomatis gunakan lokasi venue sebagai lokasi scan.
+        |
+        | Jadi ketika admin baru membuat event:
+        | scan_latitude  = latitude venue
+        | scan_longitude = longitude venue
+        |
+        | Setelah itu admin masih bisa menggesernya melalui map.
+        */
+
+        $scanLatitude = $request->scan_latitude ?? $request->latitude;
+        $scanLongitude = $request->scan_longitude ?? $request->longitude;
 
         $event = Event::create([
             'category_id' => $request->category_id,
@@ -42,8 +71,20 @@ class EventController extends Controller
             'deskripsi' => $request->deskripsi,
             'tanggal' => $request->tanggal,
             'waktu' => $request->waktu,
+
+            // Venue
             'lokasi' => $request->lokasi,
             'alamat' => $request->alamat,
+            'latitude' => $request->latitude,
+            'longitude' => $request->longitude,
+
+            // Lokasi scan
+            'scan_latitude' => $scanLatitude,
+            'scan_longitude' => $scanLongitude,
+
+            // Radius
+            'radius_checkin' => $request->radius_checkin ?? 30,
+
             'poster' => $request->poster,
             'status' => $request->status ?? 'aktif',
         ]);
@@ -90,11 +131,56 @@ class EventController extends Controller
             'deskripsi' => 'required|string',
             'tanggal' => 'required|date',
             'waktu' => 'required',
+
             'lokasi' => 'required|string|max:255',
             'alamat' => 'nullable|string|max:255',
+
+            // Lokasi venue utama
+            'latitude' => 'nullable|numeric|between:-90,90',
+            'longitude' => 'nullable|numeric|between:-180,180',
+
+            // Lokasi khusus scan/check-in
+            'scan_latitude' => 'nullable|numeric|between:-90,90',
+            'scan_longitude' => 'nullable|numeric|between:-180,180',
+
+            // Radius check-in
+            'radius_checkin' => 'nullable|integer|min:1',
+
             'poster' => 'nullable|string|max:255',
             'status' => 'required|in:aktif,selesai,dibatalkan',
         ]);
+
+        /*
+        |--------------------------------------------------------------------------
+        | Pertahankan lokasi scan jika tidak dikirim
+        |--------------------------------------------------------------------------
+        | Kalau admin hanya mengubah nama event atau data lainnya,
+        | lokasi scan yang sudah dipilih sebelumnya tidak boleh hilang.
+        */
+
+        $scanLatitude = $request->has('scan_latitude')
+            ? $request->scan_latitude
+            : $event->scan_latitude;
+
+        $scanLongitude = $request->has('scan_longitude')
+            ? $request->scan_longitude
+            : $event->scan_longitude;
+
+        /*
+        |--------------------------------------------------------------------------
+        | Fallback
+        |--------------------------------------------------------------------------
+        | Untuk event lama yang belum memiliki lokasi scan,
+        | gunakan lokasi venue.
+        */
+
+        if ($scanLatitude === null && $request->latitude !== null) {
+            $scanLatitude = $request->latitude;
+        }
+
+        if ($scanLongitude === null && $request->longitude !== null) {
+            $scanLongitude = $request->longitude;
+        }
 
         $event->update([
             'category_id' => $request->category_id,
@@ -102,8 +188,20 @@ class EventController extends Controller
             'deskripsi' => $request->deskripsi,
             'tanggal' => $request->tanggal,
             'waktu' => $request->waktu,
+
+            // Venue
             'lokasi' => $request->lokasi,
             'alamat' => $request->alamat,
+            'latitude' => $request->latitude,
+            'longitude' => $request->longitude,
+
+            // Lokasi scan
+            'scan_latitude' => $scanLatitude,
+            'scan_longitude' => $scanLongitude,
+
+            // Radius
+            'radius_checkin' => $request->radius_checkin ?? $event->radius_checkin ?? 30,
+
             'poster' => $request->poster,
             'status' => $request->status,
         ]);

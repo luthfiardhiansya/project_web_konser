@@ -17,8 +17,26 @@ class Event extends Model
         'waktu',
         'lokasi',
         'alamat',
+        'latitude',
+        'longitude',
+
+        // Lokasi scan / check-in
+        'scan_latitude',
+        'scan_longitude',
+
+        // Radius check-in dalam meter
+        'radius_checkin',
+
         'poster',
         'status',
+    ];
+
+    protected $casts = [
+        'latitude' => 'float',
+        'longitude' => 'float',
+        'scan_latitude' => 'float',
+        'scan_longitude' => 'float',
+        'radius_checkin' => 'integer',
     ];
 
     public function category()

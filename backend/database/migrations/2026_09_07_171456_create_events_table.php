@@ -12,15 +12,24 @@ return new class extends Migration
             $table->id();
             $table->foreignId('category_id')
                 ->constrained('categories')
-                ->cascadeOnDelete();
-
+                ->onDelete('cascade');
             $table->string('nama_event');
             $table->text('deskripsi');
             $table->date('tanggal');
-            $table->time('waktu');
+            $table->string('waktu');
             $table->string('lokasi');
-            $table->string('alamat')->nullable();
-            $table->string('poster')->nullable();
+            $table->text('alamat')->nullable();
+            $table->decimal('latitude', 10, 7)->nullable();
+            $table->decimal('longitude', 10, 7)->nullable();
+
+            // Koordinat lokasi scan/check-in
+            $table->decimal('scan_latitude', 10, 7)->nullable();
+            $table->decimal('scan_longitude', 10, 7)->nullable();
+
+            // Radius default check-in dalam meter
+            $table->unsignedInteger('radius_checkin')->default(30);
+
+            $table->text('poster')->nullable();
 
             $table->enum('status', [
                 'aktif',
